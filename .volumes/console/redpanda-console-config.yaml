@@ -1,0 +1,49 @@
+kafka:
+  brokers: ["redpanda:9093"]
+  # configures the user for both console form login and kafka api auth
+  sasl:
+    enabled: true
+    impersonateUser: false
+    username: console-admin
+    password: password
+    mechanism: SCRAM-SHA-256
+
+# give console user access to admin api stuff like user management
+redpanda:
+  adminApi:
+    enabled: true
+    urls: ["http://redpanda:9644"]
+    authentication:
+      impersonateUser: false
+      basic:
+        username: console-admin
+        password: password
+
+# give console user access to schema registry
+schemaRegistry:
+  urls: ["http://redpanda:8081"]
+  authentication:
+    impersonateUser: false
+    basic:
+      username: console-admin
+      password: password
+
+# enable console form login
+authentication:
+  jwtSigningKey: "DnOD/Htpae9KkGllVHh6apIc/ylsubrO"
+  useSecureCookies: true 
+  basic:
+    enabled: true
+
+# specify console permissions (not acls)
+# NOTE: "admin" role does not grant access to ACLs settings, see README
+authorization:
+  roleBindings:
+  - roleName: admin
+    users:
+      - loginType: basic
+        name: "console-admin"
+  - roleName: admin
+    users:
+      - loginType: basic
+        name: "admin"

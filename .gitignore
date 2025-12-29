@@ -1,0 +1,17 @@
+.idea
+.vscode
+
+node_modules
+build
+dist
+bin
+.gradle
+
+.env.local
+*.key
+*.pem
+*.crt
+notes.md
+test.*
+
+.volumes/redpanda/data

@@ -1,0 +1,102 @@
+server:
+    port: ${PORT}
+    servlet:
+        session:
+            timeout: 86400 # 1 day
+
+spring:
+    ### App
+    application:
+        name: ${API_NAME}
+    config:
+        # include .env file
+        import: optional:file:.env[.properties]
+    output:
+        # colored terminal
+        ansi:
+            enabled: ALWAYS
+
+    ### Security
+    autoconfigure:
+        # disable auto generated password
+        exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+    security:
+        oauth2:
+            client:
+                # redirect-uri is the spring default: /login/oauth2/code/{clientRegistrationId}
+                registration:
+                    google: 
+                        redirect-uri: ${BASE_URL}/login/oauth2/code/google
+                        client-id: ${OAUTH2_CLIENT_ID_GOOGLE}
+                        client-secret: ${OAUTH2_CLIENT_SECRET_GOOGLE}
+                        scope: 
+                            - email
+                    github:
+                        redirect-uri: ${BASE_URL}/login/oauth2/code/github
+                        client-id: ${OAUTH2_CLIENT_ID_GITHUB}
+                        client-secret: ${OAUTH2_CLIENT_SECRET_GITHUB}
+                        scope: 
+                            - user:email
+                    azure:
+                        redirect-uri: ${BASE_URL}/login/oauth2/code/azure
+                        client-id: ${OAUTH2_CLIENT_ID_AZURE}
+                        client-secret: ${OAUTH2_CLIENT_SECRET_AZURE}
+                        authorization-grant-type: authorization_code
+                        scope: 
+                            - openid
+                            - email
+                provider:
+                    google:
+                        issuer-uri: ${OAUTH2_ISSUER_URI_GOOGLE}
+                    github: 
+                        authorization-uri: ${OAUTH2_AUTHORIZATION_URI_GITHUB}
+                        token-uri: ${OAUTH2_TOKEN_URI_GITHUB}
+                        user-info-uri: ${OAUTH2_USER_INFO_URI_GITHUB}
+                    azure:
+                        authorization-uri: ${OAUTH2_AUTHORIZATION_URI_AZURE}
+                        token-uri: ${OAUTH2_TOKEN_URI_AZURE}
+                        jwk-set-uri: ${OAUTH2_JWK_SET_URI_AZURE}
+                        user-info-uri: ${OAUTH2_USER_INFO_URI_AZURE}
+                        user-name-attribute: email
+                        
+    ### DB
+    datasource:
+        # url: jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        # h2
+        url: jdbc:h2:mem:db
+        username: ${DB_USER}
+        password: ${DB_PASSWORD}
+    jpa:
+        hibernate:
+            ddl-auto: update
+        defer-datasource-initialization: true
+        open-in-view: false
+        # don't validate during db actions
+        properties:
+            jakarta:
+                persistence:
+                    validation:
+    h2:
+        console:
+            enabled: true
+
+    ### Mail
+    mail:
+        host: ${MAIL_HOST}
+        port: ${MAIL_PORT}
+        username: ${MAIL_USER}
+        password: ${MAIL_PASSWORD}
+        properties:
+            mail:
+                smtp:
+                    auth: ${SMTP_AUTH_ENABLE}
+                    starttls:
+                        enable: ${MAIL_STARTTLS_ENABLE}
+
+logging:
+    level:
+        com:
+            example: ${LOG_LEVEL}
+        # org:
+        #     springframework:
+        #         security:  TRACE

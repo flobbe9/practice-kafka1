@@ -1,0 +1,61 @@
+redpanda:
+    data_directory: /var/lib/redpanda/data
+    node_id: 0
+    seed_servers: []
+    rpc_server:
+        address: 0.0.0.0
+        port: 33145
+    kafka_api:
+        # listener for pandaproxy, use oidc bearer
+        - name: pandaproxy
+          address: 0.0.0.0
+          port: 9092
+        # listener for console, use basic auth
+        - name: console
+          address: 0.0.0.0
+          port: 9093
+          authentication_method: sasl
+    admin:
+        address: 0.0.0.0
+        port: 9644
+    advertised_rpc_api:
+        address: redpanda
+        port: 33145
+    advertised_kafka_api:
+        - name: pandaproxy
+          address: redpanda
+          port: 9092
+        - name: console
+          address: redpanda
+          port: 9093
+          authentication_method: sasl
+    developer_mode: true
+    auto_create_topics_enabled: true
+    fetch_reads_debounce_timeout: 10
+    group_initial_rebalance_delay: 0
+    group_topic_partitions: 3
+    log_segment_size_min: 1
+    storage_min_free_bytes: 10485760
+    topic_partitions_per_shard: 1000
+    write_caching_default: "true"
+    data_transforms_enabled: true
+    superusers:
+        - admin
+    http_authentication: ["BASIC", "OIDC"]
+    oidc_discovery_url: http://host.docker.internal:4001/.well-known/openid-configuration
+    # must match the "aud" claim inside the jwt token
+    oidc_token_audience: pandaproxy
+    # use the "sub" claim inside the jwt token when naming the oidc "principal"
+    oidc_principal_mapping: $.sub
+    sasl_mechanisms: ["SCRAM", "OAUTHBEARER"]
+    enable_sasl: true
+rpk:
+    overprovisioned: true
+    coredump_dir: /var/lib/redpanda/coredump
+pandaproxy:
+    pandaproxy_api:
+        - address: 0.0.0.0
+          port: 8092
+        # confusingly enables oidc login, set to "none" in order to disable authentication
+          authentication_method: http_basic
+schema_registry: {}
