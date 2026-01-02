@@ -53,3 +53,4 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
 # Docs
 - https://docs.redpanda.com/api/doc/http-proxy/
 - Redpanda endpoints: https://docs.redpanda.com/api/doc/http-proxy/operation/operation-get_consumer_offsets
+- proxy client: https://docs.redpanda.com/current/reference/properties/broker-properties/#http-proxy-client

@@ -58,4 +58,7 @@ pandaproxy:
           port: 8092
         # confusingly enables oidc login, set to "none" in order to disable authentication
           authentication_method: http_basic
+    # client_cache_max_size: 10
+    # client_keep_alive: 300000
+    consumer_instance_timeout_ms: 300000 # 5 min
 schema_registry: {}
