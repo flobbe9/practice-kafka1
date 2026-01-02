@@ -21,17 +21,17 @@ public class CustomExceptionFormat {
 
     private String timestamp;
 
-    private int status;
+    private int statusCode;
 
     private String message;
 
     private String path;
 
     
-    public CustomExceptionFormat(int status, String message) {
+    public CustomExceptionFormat(int statusCode, String message) {
 
         this.timestamp = Utils.formatLocalDateTimeDefault(LocalDateTime.now());
-        this.status = status;
+        this.statusCode = statusCode;
         this.message = message;
         this.path = Utils.getReqeustPath();             
     }
