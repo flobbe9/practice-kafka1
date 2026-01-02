@@ -1,171 +1,57 @@
 import { useState } from 'react';
-import './App.css';
+import { MEDIA_TYPE_KAFKA_JSON } from './utils/constants';
+import { catchApiException, isHttpStatusCodeAlright, throwApiException } from './utils/utils';
+import { RedpandaConfig } from './abstracts/redpanda/RedpandaConfig';
+import { RedpandaJwtAuthConfig } from './abstracts/redpanda/RedpandaJwtAuthConfig';
+import { RedpandaFetcher } from './abstracts/redpanda/RedpandaFetcher';
+
+const globalRedpandaConfig: RedpandaConfig = {
+	baseUrl: 'http://localhost:8091',
+	authConfig: new RedpandaJwtAuthConfig(async (): Promise<string> => {
+		let response: Response | null = null;
+		try {
+			response = await fetch("http://localhost:4001/jwt");
+
+		} catch (e) {
+			throwApiException({
+				statusCode: 503,
+				message: (e as Error).message,
+				path: "/jwt"
+			});
+		}
+
+		if (!isHttpStatusCodeAlright(response.status))
+			throwApiException(await response.json()); // expect backend response body to formatted exactly like CustomApiResponseFormat
+
+		return await response.text();
+	})
+}
 
 export default function App() {
-	const KAFKA_BASE_URL = "http://localhost:8000";
+	const KAFKA_BASE_URL = "http://localhost:8091";
 	const [topics, setTopics] = useState([""]);
 	const [records, setRecords] = useState([]);
 
-	async function listTopics(): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/topics`;
+	const redpandaFetcher = new RedpandaFetcher(globalRedpandaConfig);
 
-		try {
-			const response = await fetch(url);
+	async function consume<T>(): Promise<T> {
+		const path = `/consumers/group1`
 
-			console.log(response);
-			setTopics(await response.json());
-			
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	async function deleteConsumer(): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/consumers/group1/instances/consumer1`;
-
-		try {
-			console.log("delete consuumer1");
-			
-			const response = await fetch(url, {
-				method: "delete",
-				headers: {
-					'Content-Type': 'application/vnd.kafka.v2+json'
-				}
-			});
-
-			console.log(response);
-			
-			
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	async function consumeTopics(): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/consumers/group1/instances/consumer1/records`;
-
-		try {
-			console.log("get records for " + topics);
-			
-			const response = await fetch(url, {
-				method: "get",
-				headers: {
-					'Accept': 'application/vnd.kafka.json.v2+json'
-				}
-			});
-
-			console.log(response);
-			if (response.ok)
-				setRecords(await response.json());
-			
-			
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	
-	async function subscribeToTopics(): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/consumers/group1/instances/consumer1/subscription`;
-
-		try {
-			console.log("subscribe to " + topics);
-			
-			const response = await fetch(url, {
-				method: "post",
-				body: JSON.stringify({
-					topics: topics
-				}),
-				headers: {
-					"Content-Type": "application/vnd.kafka.v2+json"
-				}
-			});
-
-			console.log(response);
-			
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	async function createConsumer(groupName: string, consumerId: string): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/consumers/${groupName}`;
-
-		try {
-			const response = await fetch(url, {
-				method: "post", 
-				headers: {
-					"Content-Type": "application/vnd.kafka.v2+json"
-				},
-				body: JSON.stringify({
-					"format": "json",
-					"name": consumerId, // the consumer id
-					"auto.offset.reset": "earliest",
-					"auto.commit.enable": "false",
-					// "fetch.min.bytes": "string",
-					"consumer.request.timeout.ms": "1000"
-				})
-			});
-
-			console.log(response);
-			
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	// TODO: continue here
-	async function getOffsets(): Promise<void> {
-		const url = `${KAFKA_BASE_URL}/consumers/group1/instances/consumer1/offsets`;
-
-		try {
-			const response = await fetch(url, {
-				method: "post", 
-				headers: {
-					"Content-Type": "application/vnd.kafka.v2+json"
-				},
-				body: JSON.stringify({
-					partitions: [
-						{
-							"topic": topics[0],
-							"partition": 0
-						}
-					]
-				})
-			});
-
-			console.log(response);
-			if (response.ok)
-				console.log(await response.json());
-				
-			
-		} catch (e) {
-			console.log(e);
-		}
-		// 
+		return await redpandaFetcher.fetch(path, {
+			method: "post",
+			body: JSON.stringify({
+				name: "consumer1",
+				format: "binary"
+			}),
+			headers: {
+				"Content-Type": MEDIA_TYPE_KAFKA_JSON,
+			}
+		})
 	}
 
 	return (
 		<>
-			<button onClick={listTopics}>load topics</button>
-			<div>{topics}</div>
-
-			<button onClick={() => createConsumer("group1", "consumer1")}>create consumer</button>
-			<br />
-
-			<button onClick={subscribeToTopics}>subscribe to topics</button>
-			<br />
-
-			{/* <button onClick={getOffsets}>get offsets</button>
-			<br /> */}
-
-			<button onClick={consumeTopics}>Get records for {topics}</button>
-			<div>{records}</div>
-			<div hidden={!!records?.length}>No records</div>
-
-			<button onClick={deleteConsumer}>delete consumer</button>
-			<br />
-
+			<button onClick={() => consume()}>Consume</button>
 			<a href="http://localhost:4001/oauth2/authorization/github">Login</a>
 		</>
 	)
