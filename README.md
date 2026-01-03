@@ -50,6 +50,9 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
+# Notes
+- consumers are lost upon redpanda container recreation (at least when running "compose down")
+
 # Docs
 - https://docs.redpanda.com/api/doc/http-proxy/
 - Redpanda endpoints: https://docs.redpanda.com/api/doc/http-proxy/operation/operation-get_consumer_offsets

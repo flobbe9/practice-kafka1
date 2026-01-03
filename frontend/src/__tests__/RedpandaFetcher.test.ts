@@ -2,6 +2,7 @@ import { mockFetchJson } from "@/utils/testUtils"
 import { RedpandaFetcher } from "../redpanda/RedpandaFetcher";
 import { RedpandaConfig } from "../redpanda/RedpandaConfig";
 import { RedpandaBasicAuthConfig } from "../redpanda/RedpandaBasicAuthConfig";
+import { isCustomApiResponseFormat } from "@/CustomApiResponseFormat";
 
 const mockRedpandaConfig: RedpandaConfig = {
     baseUrl: "http://mockHost",
@@ -208,7 +209,9 @@ describe("parseRedpandaErrorResponse", () => {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message.startsWith("{")).toBe(true); // should have parsed redpanda error response to api response format
     });
+});
 
+describe("fetch", () => {
     test("unslash path", async () => {
         const redpandaFetcher = new RedpandaFetcher(mockRedpandaConfig);
         let path = "/my/path/";
@@ -276,7 +279,7 @@ describe("parseRedpandaErrorResponse", () => {
             error = e;
         }
         expect(error).not.toBeNull();
-        expect(JSON.parse((error as Error).message)).toHaveProperty("statusCode"); // expect custom api response format
+        expect(isCustomApiResponseFormat(JSON.parse((error as Error).message))).toBe(true); // expect custom api response format
 
         error = null;
         
@@ -296,6 +299,21 @@ describe("parseRedpandaErrorResponse", () => {
             error = e;
         }
         expect(error).not.toBeNull();
-        expect(JSON.parse((error as Error).message)).toHaveProperty("statusCode"); // expect custom api response format
+        expect(isCustomApiResponseFormat(JSON.parse((error as Error).message))).toBe(true); // expect custom api response format
     })
-});
+
+    test("should handle empty response body", async () => {
+        const redpandaFetcher = new RedpandaFetcher(mockRedpandaConfig);
+        mockFetchJson(
+            () => {}, 
+            new Error("Failed to parse json"), // invalid or no response body 
+            204
+        );
+        const response = await redpandaFetcher.fetch("/"); // assert does not throw
+
+        console.log(response);
+        
+        expect(isCustomApiResponseFormat(response)).toBe(true);
+        expect(response["statusCode"]).toBe(204);
+    })
+})

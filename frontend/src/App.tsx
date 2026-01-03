@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { MEDIA_TYPE_KAFKA_JSON } from './utils/constants';
-import { catchApiException, isHttpStatusCodeAlright, throwApiException } from './utils/utils';
-import { RedpandaConfig } from './abstracts/redpanda/RedpandaConfig';
-import { RedpandaJwtAuthConfig } from './abstracts/redpanda/RedpandaJwtAuthConfig';
-import { RedpandaFetcher } from './abstracts/redpanda/RedpandaFetcher';
+import { RedpandaConfig } from './redpanda/RedpandaConfig';
+import { RedpandaFetcher } from './redpanda/RedpandaFetcher';
+import { RedpandaJwtAuthConfig } from './redpanda/RedpandaJwtAuthConfig';
+import { Consumer } from './redpanda/consumer/Consumer';
+import { isHttpStatusCodeAlright, throwApiException } from './utils/utils';
 
 const globalRedpandaConfig: RedpandaConfig = {
 	baseUrl: 'http://localhost:8091',
@@ -33,25 +33,16 @@ export default function App() {
 	const [records, setRecords] = useState([]);
 
 	const redpandaFetcher = new RedpandaFetcher(globalRedpandaConfig);
+	const consumer = new Consumer(["test"], "group1", "consumer1", globalRedpandaConfig);
 
-	async function consume<T>(): Promise<T> {
-		const path = `/consumers/group1`
-
-		return await redpandaFetcher.fetch(path, {
-			method: "post",
-			body: JSON.stringify({
-				name: "consumer1",
-				format: "binary"
-			}),
-			headers: {
-				"Content-Type": MEDIA_TYPE_KAFKA_JSON,
-			}
-		})
+	async function consume(): Promise<void> {
+		return consumer.init();
 	}
 
 	return (
 		<>
 			<button onClick={() => consume()}>Consume</button>
+			<button onClick={() => consumer.delete()}>Delete</button>
 			<a href="http://localhost:4001/oauth2/authorization/github">Login</a>
 		</>
 	)

@@ -18,7 +18,12 @@ export function mockFetchJson(callback: (url: string, init?: RequestInit) => any
         callback(url, init);
 
         return Promise.resolve({
-            json: () => Promise.resolve(jsonMockResponse),
+            json: () => new Promise((res, rej) => {
+                if (jsonMockResponse instanceof Error)
+                    rej(jsonMockResponse);
+                else
+                    res(jsonMockResponse);
+            }),
             status: mockStatus,
             ok: mockStatus === 200
         })

@@ -14,7 +14,14 @@ export interface RedpandaConfig {
      * 
      * Default is 1000
      */
-    defaultTimeoutMs?: number;
+    requestTimeout?: number;
+
+    /**
+     * Time (in ms) of inactivity after which a consumer is deleted automatically
+     * 
+     * Default is `REDPANDA_DEFAULT_CONSUMER_LIFE_TIME`
+     */
+    consumerInstanceTimeout?: number;
 
     /**
      * For authenticating with the redpanda `host`.

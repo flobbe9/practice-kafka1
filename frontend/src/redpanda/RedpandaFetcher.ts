@@ -61,7 +61,19 @@ export class RedpandaFetcher {
             });
         }
 
-        const responseBody = await response.json();
+        // try to get json body
+        let responseBody = null;
+        try {
+            responseBody = await response.json();
+
+        } catch (e) {
+            responseBody = {
+                statusCode: response.status,
+                message: response.statusText,
+                path: `/${path}`,
+                timestamp: getTimeStamp()
+            } as CustomApiResponseFormat
+        }
 
         // case: bad status code
         if (!isHttpStatusCodeAlright(response.status)) {

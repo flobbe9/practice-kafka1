@@ -1,6 +1,8 @@
 /**
  * For configuring the consumption http request.
  * 
+ * Name props exactly like their url query param names.
+ * 
  * @since 0.0.1
  */
 export interface ConsumerOptions {

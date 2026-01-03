@@ -1,4 +1,4 @@
-import { isCustomApiResponseFormat, type CustomApiResponseFormat } from "@/abstracts/CustomApiResponseFormat";
+import { isCustomApiResponseFormat, type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
 
 /**
  * @param statusCode http status code to check
@@ -61,7 +61,7 @@ export function throwApiException(exception: CustomApiResponseFormat): never {
  */
 export function catchApiException(e: any): CustomApiResponseFormat {
     if (!e || !(e instanceof Error)) {
-        console.error(`Failed to catch api exception:`);
+        console.error(`Failed to catch api exception. Invalid arg:`);
         throw e;
     }
 
@@ -72,8 +72,6 @@ export function catchApiException(e: any): CustomApiResponseFormat {
         if (!isCustomApiResponseFormat(apiResponseFormat))
             throw new Error(`Invalid api response format: ${e.message}`);
 
-        console.error(e);
-        
         return apiResponseFormat;
 
     // case: e.message is not a customApiResponseFormat 
