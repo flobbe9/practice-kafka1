@@ -33,18 +33,21 @@ export default function App() {
 	const [records2, setRecords2] = useState<ConsumerRecord[]>([]);
 	const [consumerInitialized, setConsumerInitialized] = useState(false);
 
-	const consumer = new Consumer(["test"], "group1", "consumer1", globalRedpandaConfig)
-		.keepAlive(false);
-	const consumer2 = new Consumer(["test2"], "group2", "consumer2", globalRedpandaConfig)
-		.keepAlive(false);
+	const [consumer, ] = useState<Consumer>(
+		new Consumer(["test"], "group1", "consumer1", globalRedpandaConfig)
+			.keepAlive(true));
+	const [consumer2, ] = useState<Consumer>(
+		new Consumer(["test2"], "group2", "consumer2", globalRedpandaConfig)
+			.keepAlive(true)
+	);
 
 	useEffect(() => {
 		init();
 	}, []);
 
 	async function init(): Promise<void> {
-		const consumer1Promise = consumer.init();
-		const consumer2Promise = consumer2.init();
+		const consumer1Promise = consumer?.init();
+		const consumer2Promise = consumer2?.init();
 
 		await consumer1Promise;
 		await consumer2Promise;
@@ -54,11 +57,11 @@ export default function App() {
 	async function consume(num: 1 | 2 = 1): Promise<any> {
 		// setInterval(async () => {
 			if (num === 1) {
-				const response = await consumer.consume();
-				setRecords((records) => [...records, ...response]);
+				const response = await consumer?.consume();
+				setRecords((records) => [...records, ...(response ?? [])]);
 			} else {
-				const response = await consumer2.consume();
-				setRecords2((records) => [...records, ...response]);	
+				const response = await consumer2?.consume();
+				setRecords2((records) => [...records, ...(response ?? [])]);	
 			}
 
 		// }, 2000);
@@ -73,7 +76,7 @@ export default function App() {
 
 	return (
 		<>
-			<button disabled={!consumerInitialized} onClick={() => consumer.delete()}>Delete</button>
+			<button disabled={!consumerInitialized} onClick={() => consumer?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume()}>Consume1</button>
 
 			{records.map((record, i) => (
@@ -83,7 +86,7 @@ export default function App() {
 			))}
 
 			<br /><br />
-			<button disabled={!consumerInitialized} onClick={() => consumer2.delete()}>Delete</button>
+			<button disabled={!consumerInitialized} onClick={() => consumer2?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume(2)}>Consume2</button>
 
 			{records2.map((record, i) => (

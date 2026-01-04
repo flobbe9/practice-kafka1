@@ -10,7 +10,35 @@ import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_C
 import { ConsumerOptions } from "./ConsumerOptions";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
-// example
+/**
+ * For retrieving ("consuming") kafka records of certain topics.
+ * 
+ * Records are only consumed once per group. This means that `consume()` will only ever return the latest "unconsumed" records
+ * which no other consumer has yet seen.
+ * See `Topic` class in order to consume all records of a topic consistently.
+ * 
+ * ```
+ * const consumer = new Consumer(["myTopic", "myOtherTopic"], "groupName", "consumerName", globalConfig);
+ * // Optional configuration:
+ * consumer
+ *  .keepAlive(false)
+ *  .maxBytes(5000)
+ *  .minFetchBytes(5000)
+ *  .consumerInstanceTimeout(200000)
+ *  .requestTimeout(2000);
+ * 
+ * // Initialize once
+ * await consumer.init();
+ * 
+ * // consume latest records:
+ * try {
+ *  const records = await consumer.consume();
+ * } catch (e) {
+ *  const apiException = catchApiException(e);
+ *  // handle exception here
+ * }
+ * ```
+ */
 export class Consumer {
     private _topics: string[];
 
@@ -22,9 +50,11 @@ export class Consumer {
 
     private _requestTimeout: number;
 
-    private _maxBytes?: number;
+    private _maxBytes: number;
 
-    private redpandaConfig: RedpandaConfig;
+    private _fetchMinBytes: number;
+
+    private _consumerInstanceTimeout: number;
 
     private redpandaFetcher: RedpandaFetcher;
 
@@ -33,9 +63,9 @@ export class Consumer {
 
 
     /**
-     * @param topics Topic names this consumer has subscribed to.
-     * @param groupName 
-     * @param name Consumer id, also referred to as "instance" or "instance_id". Uniquely identifies the consumer within their group.
+     * @param topics topic names this group will subscribe to
+     * @param groupName must be unique in kafka instance
+     * @param name consumer id, also referred to as "instance" or "instance_id". Uniquely identifies the consumer within their group
      * @param redpandaConfig 
      */
     public constructor(topics: string[], groupName: string, name: string, redpandaConfig: RedpandaConfig) {
@@ -44,11 +74,14 @@ export class Consumer {
         this._topics = topics;
         this._groupName = groupName;
         this._name = name;
-        this.redpandaConfig = redpandaConfig;
         this.redpandaFetcher = new RedpandaFetcher(redpandaConfig);
         
+        // default values
         this._keepAlive = true;
-        this._requestTimeout = redpandaConfig.requestTimeout ?? REDPANDA_DEFAULT_REQUEST_TIMEOUT;
+        this._requestTimeout = REDPANDA_DEFAULT_REQUEST_TIMEOUT;
+        this._maxBytes = -1;
+        this._consumerInstanceTimeout = REDPANDA_DEFAULT_CONSUMER_LIFE_TIME;
+        this._fetchMinBytes = -1;
     }
 
     /** 
@@ -68,6 +101,8 @@ export class Consumer {
      * Default is `redpandaConfig.requestTimeout` or {@link REDPANDA_DEFAULT_REQUEST_TIMEOUT}
      */
     public requestTimeout(requestTimeout: number): Consumer {
+        assertStrictlyFalsyAndThrow(requestTimeout);
+
         this._requestTimeout = requestTimeout;
 
         return this;
@@ -80,11 +115,40 @@ export class Consumer {
      * Default is `undefined` meaning unlimited bytes. The same applies to negative value.
      */
     public maxBytes(maxBytes: number): Consumer {
+        assertStrictlyFalsyAndThrow(maxBytes);
+
         this._maxBytes = maxBytes;
 
         return this;
     }
+    
+    /**
+     * The minimum amount of data to consume in on request. If there's less data kafka will wait for more data 
+     * (will wait for 'fetch.max.wait.ms', this cannot be configured with this library).
+     */
+    public fetchMinBytes(fetchMinBytes: number): Consumer {
+        assertStrictlyFalsyAndThrow(fetchMinBytes);
 
+        this._fetchMinBytes = fetchMinBytes;
+
+        return this;
+    }
+
+    /**
+     * Time (in ms) of inactivity after which a consumer is deleted automatically
+     * 
+     * Default is `REDPANDA_DEFAULT_CONSUMER_LIFE_TIME`
+     */
+    public consumerInstanceTimeout(consumerInstanceTimeout: number): Consumer {
+        this._consumerInstanceTimeout = consumerInstanceTimeout;
+
+        return this;
+    }
+
+    /**
+     * Creates this consumer (and the group if not exists) and subscribes the group to all topics. Also 
+     * starts keepAlive interval unless disabled.
+     */
     public async init(): Promise<void> {
         await this.create();
 
@@ -106,7 +170,7 @@ export class Consumer {
      */
     public async consume(consumerOptions: ConsumerOptions = {}): Promise<ConsumerRecord[]> {
         const requestTimeout = consumerOptions.timeout ?? this._requestTimeout;
-        const maxBytes = consumerOptions.max_bytes ?? this._maxBytes ?? -1; // -1 meaning infinite bytes
+        const maxBytes = consumerOptions.max_bytes ?? this._maxBytes;
         const path = `/consumers/${this._groupName}/instances/${this._name}/records?timeout=${requestTimeout
             }&max_bytes=${maxBytes}`;
 
@@ -199,7 +263,9 @@ export class Consumer {
     /**
      * Creates a consumer instance with id `_name`. 
      * 
-     * Configure consumer with an initial offset of 0 for them to retrieve all records when consuming the first time. 
+     * Configure the group with an initial offset of 0 for the first consumer to retrieve all records when consuming the first time.
+     * 
+     * Will not throw if consumer already exists.
      */
     private async create(): Promise<void> {
         const path = `/consumers/${this._groupName}`;
@@ -207,8 +273,8 @@ export class Consumer {
             "format": "binary",
             "name": this._name,
             "auto.offset.reset": "earliest",
-            // "auto.commit.enable": "false",
-            // "fetch.min.bytes": "string",
+            "auto.commit.enable": "false",
+            "fetch.min.bytes": String(this._fetchMinBytes),
             "consumer.request.timeout.ms": String(this._requestTimeout)
         }
 
@@ -256,14 +322,14 @@ export class Consumer {
 
     /**
      * Makes a cheap http request at an interval which should prevent redpanda from auto deleting this consumer.
-     * Interval is `this.redpandaConfig.consumerInstanceTimeout ?? REDPANDA_DEFAULT_CONSUMER_LIFE_TIME` minus 3000 ms.
+     * Interval is `this._consumerInstanceTimeout - 3000`.
      */
     private startConsumerKeepAlive(): void {
         if (!isStrictlyFalsy(this.keepAliveIntervalId))
             return;
 
         // - 3000ms to take slow internet and other latency into account 
-        const delay = (this.redpandaConfig.consumerInstanceTimeout ?? REDPANDA_DEFAULT_CONSUMER_LIFE_TIME) - 3000;
+        const delay = this._consumerInstanceTimeout - 3000;
         if (delay <= 3000) {
             console.warn(`Not keeping consumer alive because 'consumerInstanceTimeout' is too low: ${delay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`);
             return;

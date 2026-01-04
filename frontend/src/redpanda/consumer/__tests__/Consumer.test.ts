@@ -25,12 +25,11 @@ describe("startConsumerKeepAlive", () => {
         await consumer.init();
         expect(console.warn).not.toHaveBeenCalledWith(expectedWarningMsg);
 
-        // consumer timeout too low
-        mockRedpandaConfig.consumerInstanceTimeout = 2000; // too low
+        const badDelay = 2000;
         consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);
+        consumer.consumerInstanceTimeout(badDelay + 3000); // too low
         await consumer.init();
 
-        const badDelay = mockRedpandaConfig.consumerInstanceTimeout - 3000;
         expectedWarningMsg = expectedWarningMsg.replace(String(goodDelay), String(badDelay));
         expect(console.warn).toHaveBeenCalledWith(expectedWarningMsg);
     })
