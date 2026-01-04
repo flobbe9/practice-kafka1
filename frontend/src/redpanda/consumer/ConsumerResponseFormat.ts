@@ -1,4 +1,4 @@
-import { ConsumerRecord } from "./ConsumerRecord";
+import { ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
 /**
  * The redapnda response body format for consuming records.
@@ -6,5 +6,5 @@ import { ConsumerRecord } from "./ConsumerRecord";
  * @since 0.0.1
  */
 export interface ConsumerResponseFormat {
-    records: ConsumerRecord[]
+    records: ConsumerRecordResponseFormat[]
 }

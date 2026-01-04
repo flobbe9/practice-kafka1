@@ -1,4 +1,6 @@
-import { assertStrictlyFalsyAndThrow } from "./utils";
+import { assertStrictlyFalsyAndThrow } from "@/utils/utils";
+import { Buffer } from 'buffer';
+
 
 export function base64Encode(str: string): string {
     assertStrictlyFalsyAndThrow(str);

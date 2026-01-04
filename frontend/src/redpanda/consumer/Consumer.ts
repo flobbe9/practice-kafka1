@@ -1,10 +1,14 @@
-import { CustomApiResponseFormat } from "@/CustomApiResponseFormat";
+import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
+import { base64Decode } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, catchApiException, isStrictlyFalsy } from "@/utils/utils";
-import { RedpandaConfig } from "../RedpandaConfig";
+import { type RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
-import { RedapndaOffset } from "../RedpandaOffset";
-import { RedpandaOffsetRequestBody } from "../RedpandaOffsetRequestBody";
-import { MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
+import { type RedapndaOffset } from "../RedpandaOffset";
+import { type RedpandaOffsetRequestBody } from "../RedpandaOffsetRequestBody";
+import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
+import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
+import { ConsumerOptions } from "./ConsumerOptions";
+import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
 // example
 export class Consumer {
@@ -45,7 +49,6 @@ export class Consumer {
         
         this._keepAlive = true;
         this._requestTimeout = redpandaConfig.requestTimeout ?? REDPANDA_DEFAULT_REQUEST_TIMEOUT;
-        this.keepAliveIntervalId = undefined;
     }
 
     /** 
@@ -89,10 +92,108 @@ export class Consumer {
 
         if (this._keepAlive)
             this.startConsumerKeepAlive();
+    } 
+
+    /**
+     * Fetch the latest records for all topics this consumer has subscribed to (`this._topics`). Records can only be consumed once per group
+     * which means that repeated consuming will never return the same records.
+     * 
+     * `key` and `value` response values will always be base64 encoded but will be decoded and then possibly parsed to json in here. 
+     * Set `consumerOptions.dontDecodeKeyValues` to `true` in order not to decode or parse them but simply return the raw response body.
+     * 
+     * @param consumerOptions fallback to consumer class fields
+     * @returns clean, parsed records. Empty array if there are no new records or `this._topics` don't exist
+     */
+    public async consume(consumerOptions: ConsumerOptions = {}): Promise<ConsumerRecord[]> {
+        const requestTimeout = consumerOptions.timeout ?? this._requestTimeout;
+        const maxBytes = consumerOptions.max_bytes ?? this._maxBytes ?? -1; // -1 meaning infinite bytes
+        const path = `/consumers/${this._groupName}/instances/${this._name}/records?timeout=${requestTimeout
+            }&max_bytes=${maxBytes}`;
+
+        const response = await this.redpandaFetcher.fetch(path, {
+            headers: {
+                "Accept": MEDIA_TYPE_KAFKA_BINARY_JSON
+            }
+        });
+
+        if (consumerOptions.dontDecodeKeyValues)
+            return response;
+
+        return this.parseConsumerResponse(response);
     }
 
+    /**
+     * Will decode `key` and `value` values from base64 to plain text and then either return plainly or parse to json.
+     * 
+     * @param consumerResponse unmodified json response body returned by consumer request
+     * @returns consumed records with parsed `key` and `value`
+     */
+    private parseConsumerResponse(consumerResponse: ConsumerRecordResponseFormat[]): ConsumerRecord[] {
+        assertStrictlyFalsyAndThrow(consumerResponse);
+
+        if (!consumerResponse.length)
+            return [];
+
+        const parsedRecords: ConsumerRecord[] = new Array(consumerResponse.length);
+
+        consumerResponse
+            .forEach((record, i) => {
+                const { key, value, ...recordRest } = record;
+                
+                const decodedKey = key === null ? null : base64Decode(key);
+                const decodedValue = value === null ? null : base64Decode(value);
+
+                parsedRecords[i] = {
+                    ...recordRest,
+                    key: this.parseConsumerKeyValue(decodedKey),
+                    value: this.parseConsumerKeyValue(decodedValue)
+                }
+            })
+
+        return parsedRecords;
+    }
+
+    /**
+     * Parse `keyValue` to json or return plain arg.
+     * 
+     * @param keyValue to be parsed
+     * @returns parsed key value
+     * @throws if json parse error or falsy arg
+     */
+    private parseConsumerKeyValue(keyValue: string | null): RedpandaRecordKeyValueType {
+        if (keyValue === null)
+            return null;
+
+        if (keyValue.startsWith("{"))
+            return JSON.parse(keyValue);
+
+        return keyValue;
+    }
+
+    /**
+     * Delete this consumer and stop keep alive interval.
+     */
     public async delete(): Promise<void> {
         this.stopConsumerKeepAlive();
+
+        const path = `/consumers/${this._groupName}/instances/${this._name}`;
+        try {
+            return await this.redpandaFetcher.fetch(path, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": MEDIA_TYPE_KAFKA_JSON
+                }
+            });
+
+        } catch (e) {
+            const apiException = catchApiException(e);
+
+            // case: consumer did not exist
+            if (apiException.statusCode === 404)
+                return Promise.resolve();
+
+            throw e;
+        }
     }
 
     /**
@@ -132,7 +233,9 @@ export class Consumer {
     }
 
     /**
-     * Subscribe consumer to `this._topics` to enable consumption. TODO 
+     * Subscribe `this._groupName` to `this._topics` to enable consumption.
+     * 
+     * Wont throw if topics don't exist.
      * 
      * @return response format with status 204 if no error
      */

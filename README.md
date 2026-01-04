@@ -35,7 +35,7 @@ rpk security acl create --operation read,write,describe,create --topic=* --allow
 ## groups
 - Give all users permission to some operations for any group:
 ```
-rpk security acl create --operation describe,read,create,write --group=* --allow-principal='*'
+rpk security acl create --operation describe,read,create,write --group=* --allow-principal='*' \
 -X user=<super-user> \
 -X pass=<super-user-password> \
 -X sasl.mechanism=SCRAM-SHA-256
@@ -49,6 +49,23 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
 -X pass=<super-user-password> \
 -X sasl.mechanism=SCRAM-SHA-256
 ```
+
+# offsets
+- Delete offset for groups:
+    - `rpk group offset-delete <group> --from-file <fileName>`
+        - with file like <br>
+        ```
+        topic_a 0
+        topic_a 1
+        topic_b 0
+        ```
+    - `rpk group offset-delete <group> --topic <topic:partitionsCommaSeparated>`
+        - e.g. `rpk group offset-delete group1 --topic topic1:0,1,2` <br>
+            deletes offsets for "group1", "topic1" for partitions 0, 1 and 2
+    - -X user=<super-user> \
+        -X pass=<super-user-password> \
+        -X sasl.mechanism=SCRAM-SHA-256
+    - https://docs.redpanda.com/current/reference/rpk/rpk-group/rpk-group-offset-delete/
 
 # Notes
 - consumers are lost upon redpanda container recreation (at least when running "compose down")

@@ -1,4 +1,4 @@
-import { isCustomApiResponseFormat } from "../CustomApiResponseFormat";
+import { isCustomApiResponseFormat } from "@/CustomApiResponseFormat";
 
 describe("isCustomApiResponseFormat", () => {
     test("Expect truthy", () => {

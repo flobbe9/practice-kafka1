@@ -10,4 +10,4 @@ export type RedpandaRecordKeyValueFormat = "json" | "txt" | "base64" | null;
  * 
  * @since 0.0.1
  */
-export type RedpandaRecordKeyValue = Record<string, any> | string;
+export type RedpandaRecordKeyValueType = Record<string, any> | string | null;

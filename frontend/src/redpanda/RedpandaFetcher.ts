@@ -1,6 +1,6 @@
 import { hasOwnIgnoreCase, trim } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, getTimeStamp, isHttpStatusCodeAlright, throwApiException } from "@/utils/utils";
-import { CustomApiResponseFormat } from "../CustomApiResponseFormat";
+import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
 import type { RedpandaConfig } from "./RedpandaConfig";
 
 /**

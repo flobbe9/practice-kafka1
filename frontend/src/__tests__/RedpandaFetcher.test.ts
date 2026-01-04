@@ -1,6 +1,6 @@
 import { mockFetchJson } from "@/utils/testUtils"
 import { RedpandaFetcher } from "../redpanda/RedpandaFetcher";
-import { RedpandaConfig } from "../redpanda/RedpandaConfig";
+import { type RedpandaConfig } from "../redpanda/RedpandaConfig";
 import { RedpandaBasicAuthConfig } from "../redpanda/RedpandaBasicAuthConfig";
 import { isCustomApiResponseFormat } from "@/CustomApiResponseFormat";
 
