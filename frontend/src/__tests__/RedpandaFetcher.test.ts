@@ -3,12 +3,12 @@ import { RedpandaFetcher } from "../redpanda/RedpandaFetcher";
 import { type RedpandaConfig } from "../redpanda/RedpandaConfig";
 import { RedpandaBasicAuthConfig } from "../redpanda/RedpandaBasicAuthConfig";
 import { isCustomApiResponseFormat } from "@/CustomApiResponseFormat";
+import { AUTHORIIZATION_HEADER_KEY } from "@/utils/constants";
 
 const mockRedpandaConfig: RedpandaConfig = {
     baseUrl: "http://mockHost",
     authConfig: RedpandaBasicAuthConfig.getInstance("user", "password")
 };
-const authHeaderKey = "Authorization";
 
 describe("addFetchHeaders", () => {
     test("works with falsy arg", async () => {
@@ -20,10 +20,10 @@ describe("addFetchHeaders", () => {
         const redpandaFetcher = new RedpandaFetcher(mockRedpandaConfig);
 
         await redpandaFetcher.fetch("/"); // no config arg
-        expect(fetchHeaders).toHaveProperty(authHeaderKey);
+        expect(fetchHeaders).toHaveProperty(AUTHORIIZATION_HEADER_KEY);
 
         await redpandaFetcher.fetch("/", {}); // no headers prop
-        expect(fetchHeaders).toHaveProperty(authHeaderKey);
+        expect(fetchHeaders).toHaveProperty(AUTHORIIZATION_HEADER_KEY);
     })
 
     test("does not replace matching header (caseinsensitive)", async () => {
@@ -34,12 +34,12 @@ describe("addFetchHeaders", () => {
 
         const redpandaFetcher = new RedpandaFetcher(mockRedpandaConfig);
 
-        await redpandaFetcher.fetch("/", {headers: {[authHeaderKey]: "0"}});
-        expect(fetchHeaders[authHeaderKey]).toBe("0"); // should not have replace value with "Basic ..."
+        await redpandaFetcher.fetch("/", {headers: {[AUTHORIIZATION_HEADER_KEY]: "0"}});
+        expect(fetchHeaders[AUTHORIIZATION_HEADER_KEY]).toBe("0"); // should not have replace value with "Basic ..."
 
-        await redpandaFetcher.fetch("/", {headers: {[authHeaderKey.toLowerCase()]: "0"}});
-        expect(fetchHeaders).toHaveProperty(authHeaderKey.toLowerCase()); // should still have exact same key
-        expect(fetchHeaders[authHeaderKey.toLowerCase()]).toBe("0");
+        await redpandaFetcher.fetch("/", {headers: {[AUTHORIIZATION_HEADER_KEY.toLowerCase()]: "0"}});
+        expect(fetchHeaders).toHaveProperty(AUTHORIIZATION_HEADER_KEY.toLowerCase()); // should still have exact same key
+        expect(fetchHeaders[AUTHORIIZATION_HEADER_KEY.toLowerCase()]).toBe("0");
     })
 
     test("should add auth header", async () => {
@@ -51,7 +51,7 @@ describe("addFetchHeaders", () => {
         const redpandaFetcher = new RedpandaFetcher(mockRedpandaConfig);
         
         await redpandaFetcher.fetch("/", {headers: {"otherHeader": "0"}});
-        expect(fetchHeaders).toHaveProperty(authHeaderKey); // should have added
+        expect(fetchHeaders).toHaveProperty(AUTHORIIZATION_HEADER_KEY); // should have added
         expect(fetchHeaders).toHaveProperty("otherHeader"); // should keep existing headers
     })
 })

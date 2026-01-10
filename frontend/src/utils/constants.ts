@@ -17,3 +17,4 @@ export const REDPANDA_ERROR_CODES_HTTP_STATUS_MAPPING = {
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After
  */
 export const DEFAULT_FETCH_RETRY_AFTER = 2;
+export const AUTHORIIZATION_HEADER_KEY = "Authorization";

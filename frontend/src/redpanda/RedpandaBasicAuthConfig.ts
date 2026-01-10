@@ -35,8 +35,4 @@ export class RedpandaBasicAuthConfig extends RedpandaAuthConfig {
     public getAuthorizationHeaderValue(): Promise<string> {
         return Promise.resolve(`Basic ${this.base64Credentials}`);
     }
-
-    public async refetchAuthorizationHeaderValue(): Promise<void> {
-        // not implemented, nothing to fetch
-    }
 }

@@ -38,19 +38,15 @@ export default function App() {
 			.keepAlive(true));
 	const [consumer2, ] = useState<Consumer>(
 		new Consumer(["test2"], "group2", "consumer2", globalRedpandaConfig)
-			.keepAlive(true)
-	);
+			.keepAlive(true));
 
 	useEffect(() => {
 		init();
 	}, []);
 
 	async function init(): Promise<void> {
-		const consumer1Promise = consumer?.init();
-		const consumer2Promise = consumer2?.init();
-
-		await consumer1Promise;
-		await consumer2Promise;
+		const consumer1Promise = await consumer?.init();
+		const consumer2Promise = await consumer2?.init();
 		setConsumerInitialized(true);
 	}
 

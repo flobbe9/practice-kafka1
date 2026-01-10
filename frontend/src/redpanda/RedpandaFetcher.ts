@@ -2,6 +2,8 @@ import { hasOwnIgnoreCase, trim } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, getTimeStamp, isHttpStatusCodeAlright, throwApiException } from "@/utils/utils";
 import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
 import type { RedpandaConfig } from "./RedpandaConfig";
+import { AUTHORIIZATION_HEADER_KEY } from "@/utils/constants";
+import { RedpandaRefetchableAuthConfig } from "./RedpandaRefetchableAuthConfig";
 
 /**
  * Use this class for any fetch request to redpanda: 
@@ -40,7 +42,9 @@ export class RedpandaFetcher {
     public async fetch(path: string, fetchConfig: RequestInit = {}, refetchAuthIf401 = true): Promise<any> {
         assertStrictlyFalsyAndThrow(path);
 
-        // add auth headers
+        // wont refetch on 401 if the auth header is already defined
+        const isAuthHeaderPredefined = hasOwnIgnoreCase(fetchConfig.headers ?? {}, AUTHORIIZATION_HEADER_KEY);
+
         fetchConfig.headers = await this.addFetchHeaders(fetchConfig.headers);
         
         path = trim(path, "/");
@@ -78,8 +82,10 @@ export class RedpandaFetcher {
         // case: bad status code
         if (!isHttpStatusCodeAlright(response.status)) {
             // case: auth token might be expired, refresh, then try again once
-            if (response.status === 401 && refetchAuthIf401) {
+            if (response.status === 401 && refetchAuthIf401 && !isAuthHeaderPredefined && this.redpandaConfig.authConfig instanceof RedpandaRefetchableAuthConfig) {
                 await this.redpandaConfig.authConfig.refetchAuthorizationHeaderValue();
+                // make sure the auth header is beeing set by fetch() method
+                delete (fetchConfig.headers as Record<string, string>)[AUTHORIIZATION_HEADER_KEY];
                 return this.fetch(path, fetchConfig, false);
             } 
 
@@ -145,9 +151,9 @@ export class RedpandaFetcher {
      * @return modified `existingFetchHeaders`
      */
     private async addFetchHeaders(existingFetchHeaders: HeadersInit = {}): Promise<HeadersInit> {
-        if (!hasOwnIgnoreCase(existingFetchHeaders, "Authorization")) {
+        if (!hasOwnIgnoreCase(existingFetchHeaders, AUTHORIIZATION_HEADER_KEY)) {
             const authorizationHeaderValue = await this.redpandaConfig.authConfig.getAuthorizationHeaderValue();
-            Object.assign(existingFetchHeaders, {"Authorization": authorizationHeaderValue});
+            Object.assign(existingFetchHeaders, {[AUTHORIIZATION_HEADER_KEY]: authorizationHeaderValue});
         }
 
         return existingFetchHeaders;

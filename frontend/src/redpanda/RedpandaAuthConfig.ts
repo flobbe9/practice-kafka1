@@ -7,13 +7,8 @@ export abstract class RedpandaAuthConfig {
     /**
      * Refetch the header value if falsy.
      * 
-     * @return the `"Authorization"` header value for redpanda http requests (excluding the header key, so e.g. `Bearer dGVzdA==`
+     * @return the `Authorization` header value for redpanda http requests (excluding the header key, so e.g. `Bearer dGVzdA==`
      * or `Basic dGVzdA==`)
      */
     public abstract getAuthorizationHeaderValue(): Promise<string>;
-
-    /**
-     * Should refresh the auth header value if possible, such that `getAuthoriaztioniheaderValue()` will return an updated value.
-     */
-    public abstract refetchAuthorizationHeaderValue(): Promise<void>;
 }

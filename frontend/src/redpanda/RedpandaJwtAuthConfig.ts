@@ -1,12 +1,12 @@
 import { assertStrictlyFalsyAndThrow } from "@/utils/utils";
-import { RedpandaAuthConfig } from "./RedpandaAuthConfig";
+import { RedpandaRefetchableAuthConfig } from "./RedpandaRefetchableAuthConfig";
 
 /**
  * Use an jwt bearer token for authorization, e.g. generated from an oidc flow.
  * 
  * @since 0.0.1
  */
-export class RedpandaJwtAuthConfig extends RedpandaAuthConfig {
+export class RedpandaJwtAuthConfig extends RedpandaRefetchableAuthConfig {
     
     /** The return value of `getJwtBearerToken()`. Used as fallback if present to minimize fetch calls */
     private jwtBearerToken: string;
