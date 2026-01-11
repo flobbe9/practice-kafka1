@@ -117,3 +117,16 @@ function prepend0ToNumber(num: number, totalDigits = 2): string {
 
     return str;
 }
+
+/**
+ * @param str string to check
+ * @returns true if given string is empty or only contains white space chars
+ */
+export function isBlank(str: string | undefined | null): boolean {
+    if (!str && str !== "")
+        return true;
+
+    str = str.trim();
+
+    return str.length === 0;
+}

@@ -104,7 +104,7 @@ export class RedpandaFetcher {
      */
     private parseRedpandaErrorResponse(responseBody: any): CustomApiResponseFormat | never {
         if (!this.isRedpandaErrorResponse(responseBody))
-            throw new Error(`Unexpected redpanda error response format ${responseBody}`);
+            throw new Error(`Unexpected redpanda error response format ${JSON.stringify(responseBody)}`);
 
         const redpandaErrorCode = responseBody["code"] ?? responseBody["error_code"];
         return {

@@ -4,7 +4,7 @@ import { assertStrictlyFalsyAndThrow, catchApiException, isStrictlyFalsy } from 
 import { type RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
 import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
-import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
+import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
 import { ConsumerOptions } from "./ConsumerOptions";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
@@ -54,6 +54,8 @@ export class Consumer {
 
     private _consumerInstanceTimeout: number;
 
+    private _sessionTimeout: number;
+
     private redpandaFetcher: RedpandaFetcher;
 
     /** Should be `undefined` while no keepAlive-interval is running */
@@ -79,6 +81,7 @@ export class Consumer {
         this._requestTimeout = REDPANDA_DEFAULT_REQUEST_TIMEOUT;
         this._maxBytes = -1;
         this._consumerInstanceTimeout = REDPANDA_DEFAULT_CONSUMER_LIFE_TIME;
+        this._sessionTimeout = REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT;
         this._fetchMinBytes = -1;
     }
 
@@ -135,12 +138,26 @@ export class Consumer {
     }
 
     /**
-     * Time (in ms) of inactivity after which a consumer is deleted automatically
+     * Time (in ms) of inactivity after which a consumer is deleted automatically 
+     * (`consumer_instance_timeout_ms` in "redpanda.yaml")
      * 
      * Default is `REDPANDA_DEFAULT_CONSUMER_LIFE_TIME`
      */
     public consumerInstanceTimeout(consumerInstanceTimeout: number): Consumer {
         this._consumerInstanceTimeout = consumerInstanceTimeout;
+
+        return this;
+    }
+
+    /**
+     * Time (in ms) of inactivity after which a consumer session becomes invalid (session.timeout.ms)
+     * 
+     * Default is `REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT`
+     * 
+     * @see https://kafka.apache.org/34/configuration/consumer-configs/#consumerconfigs_session.timeout.ms
+     */
+    public sessionTimeout(sessionTimeout: number): Consumer {
+        this._sessionTimeout = sessionTimeout;
 
         return this;
     }
@@ -322,16 +339,16 @@ export class Consumer {
 
     /**
      * Makes a cheap http request at an interval which should prevent redpanda from auto deleting this consumer.
-     * Interval is `this._consumerInstanceTimeout - 3000`.
+     * Interval is the smaller value of `this._sessionTimeout` and `this._consumerInstanceTimeout` minus 3000.
      */
     private startConsumerKeepAlive(): void {
         if (!isStrictlyFalsy(this.keepAliveIntervalId))
             return;
 
         // - 3000ms to take slow internet and other latency into account 
-        const delay = this._consumerInstanceTimeout - 3000;
+        const delay = Math.min(this._consumerInstanceTimeout ?? this._sessionTimeout) - 3000;
         if (delay <= 3000) {
-            console.warn(`Not keeping consumer alive because 'consumerInstanceTimeout' is too low: ${delay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`);
+            console.warn(`Not keeping consumer alive because either 'consumerInstanceTimeout' or 'sessionTimeout' is too low: ${delay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`);
             return;
         }
 
