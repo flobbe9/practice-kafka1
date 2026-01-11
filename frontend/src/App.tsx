@@ -45,8 +45,11 @@ export default function App() {
 	}, []);
 
 	async function init(): Promise<void> {
-		const consumer1Promise = await consumer?.init();
-		const consumer2Promise = await consumer2?.init();
+		const consumer1Promise = consumer?.init();
+		const consumer2Promise = consumer2?.init();
+
+		await consumer1Promise;
+		await consumer2Promise;
 		setConsumerInitialized(true);
 	}
 

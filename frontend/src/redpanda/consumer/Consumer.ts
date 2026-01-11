@@ -3,8 +3,6 @@ import { base64Decode } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, catchApiException, isStrictlyFalsy } from "@/utils/utils";
 import { type RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
-import { type RedapndaOffset } from "../RedpandaOffset";
-import { type RedpandaOffsetRequestBody } from "../RedpandaOffsetRequestBody";
 import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
 import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
 import { ConsumerOptions } from "./ConsumerOptions";
@@ -86,6 +84,8 @@ export class Consumer {
 
     /** 
      * Indicates to prevent the consumer from beeing deleted by redapnda automatically. 
+     * 
+     * Notice that consumers are deleted on redpanda restart regardless of `keepAlive`. 
      * 
      * Default is `true`.
      */
@@ -355,30 +355,5 @@ export class Consumer {
 
         clearInterval(this.keepAliveIntervalId);
         this.keepAliveIntervalId = undefined;
-    }
-
-    /**
-     * Not sure what these offsets mean exactly...
-     * 
-     * @param partitions to request the offsets for. If not specified, offsets are returned for all topics' 0-partition
-     * @returns offsets that have been explicitly commited via post request
-     */
-    // NOTE: this is not possible at the moment because js fetch does not allow for get requests to have a request body
-    public async getOffsets(partitions?: RedpandaOffsetRequestBody[]): Promise<RedapndaOffset[]> {
-        const path = `/consumers/${this._groupName}/instances/${this._name}/offsets`;
-        const body: {partitions: RedpandaOffsetRequestBody[]} = {
-            // empty array is fine
-            partitions: partitions ?? this._topics.map(topic => ({
-                topic,
-                partition: 0
-            }))
-        }
-
-        return await this.redpandaFetcher.fetch(path, {
-            body: JSON.stringify(body),
-            headers: {
-                "Content-Type": MEDIA_TYPE_KAFKA_JSON
-            }
-        });
     }
 }

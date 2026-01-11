@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+    environment:
+      TZ: Europe/Berlin
     volumes:
       - ./.volumes/redpanda/redpanda.yaml:/etc/redpanda/redpanda.yaml
       - ./.volumes/redpanda/data:/var/lib/redpanda/data

@@ -5,13 +5,10 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,13 +26,10 @@ import org.springframework.web.server.ResponseStatusException;
 import com.example.backend.config.RsaKeyService;
 import com.example.backend.dtos.JwkDto;
 import com.example.backend.dtos.JwkDto.JwkSetDto;
-import com.example.backend.dtos.JwtDto;
-import com.example.backend.helpers.Utils;
-import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 
 @Service
 public class JwtService {
@@ -69,6 +63,7 @@ public class JwtService {
             .issuer(this.BASE_URL_DOCKER)
             .issuedAt(now)
             .expiresAt(now.plusSeconds(86_400)) // 1 day
+            // .expiresAt(now.plusSeconds(10))
             .subject(authentication.getName())
             .audience(List.of("pandaproxy"))
             .claims((map) -> {
@@ -91,18 +86,19 @@ public class JwtService {
         return this.jwtEncoder.encode(JwtEncoderParameters.from(header, claims));
     }
 
-    //  TODO: continue here, align this with JWKSource
     public JwkSetDto getJwks() {
-        String n = (String) getJwk().getRequiredParams().get("n");
-        String e = (String) getJwk().getRequiredParams().get("e");
-        return new JwkSetDto(List.of(new JwkDto(
-            "RSA", 
-            "RS256", 
-            this.rsaKeyService.getKeyId(), 
-            KeyUse.SIGNATURE.identifier(),
-            n,
-            e
-        )));
+        JWK jwk = getJwk();
+
+        return new JwkSetDto(List.of(
+            new JwkDto(
+                jwk.getKeyType().getValue(),
+                jwk.getAlgorithm().getName(), 
+                jwk.getKeyID(), 
+                jwk.getKeyUse().identifier(),
+                (String) jwk.getRequiredParams().get("n"),
+                (String) jwk.getRequiredParams().get("e")
+            )
+        ));
     }
 
     public JWK getJwk() {
@@ -110,6 +106,7 @@ public class JwtService {
             .privateKey((RSAPrivateKey) this.rsaKeyService.getKeyPair().getPrivate())
             .keyUse(KeyUse.SIGNATURE)
             .keyID(this.rsaKeyService.getKeyId())
+            .algorithm(Algorithm.parse(this.jwsAlgorithm.getName()))
             .issueTime(new Date())
             .build();
     }
