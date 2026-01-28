@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Consumer } from './redpanda/consumer/Consumer';
 import { ConsumerRecord } from './redpanda/consumer/ConsumerRecord';
 import { RedpandaConfig } from './redpanda/RedpandaConfig';
 import { RedpandaJwtAuthConfig } from './redpanda/RedpandaJwtAuthConfig';
 import { RedpandaRecordKeyValueType } from './redpanda/RedpandaRecordKeyValueType';
 import { isHttpStatusCodeAlright, throwApiException } from './utils/utils';
+import { Producer } from './redpanda/producer/Producer';
 
 const globalRedpandaConfig: RedpandaConfig = {
 	baseUrl: 'http://localhost:8091',
@@ -35,10 +36,18 @@ export default function App() {
 
 	const [consumer, ] = useState<Consumer>(
 		new Consumer(["test"], "group1", "consumer1", globalRedpandaConfig)
-			.keepAlive(true));
+			.keepAlive(true)
+			.consumerInstanceTimeout(45000));
 	const [consumer2, ] = useState<Consumer>(
 		new Consumer(["test2"], "group2", "consumer2", globalRedpandaConfig)
-			.keepAlive(true));
+			.keepAlive(true)
+			.consumerInstanceTimeout(45000));
+
+	const [producer, ] = useState<Producer>(
+		new Producer("testt", globalRedpandaConfig)
+	)
+	const keyInputRef = useRef<HTMLInputElement>(null);
+	const valueInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		init();
@@ -73,9 +82,34 @@ export default function App() {
 		return JSON.stringify(keyValue);
 	}
 
+	async function produce(): Promise<any> {
+		await producer.produce({
+			records: [
+				{
+					key: keyInputRef.current?.value || null,
+					value: valueInputRef.current?.value || null,
+				},
+				{
+					key: keyInputRef.current?.value || null,
+					value: valueInputRef.current?.value || null,
+					partition: 1
+				},
+				{
+					key: keyInputRef.current?.value || null,
+					value: "2",
+					partition: 2
+				},
+				{
+					key: keyInputRef.current?.value || null,
+					value: "3",
+				}
+			]
+		})
+	}
+
 	return (
 		<>
-			<button disabled={!consumerInitialized} onClick={() => consumer?.delete()}>Delete</button>
+			<button onClick={() => consumer?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume()}>Consume1</button>
 
 			{records.map((record, i) => (
@@ -85,7 +119,7 @@ export default function App() {
 			))}
 
 			<br /><br />
-			<button disabled={!consumerInitialized} onClick={() => consumer2?.delete()}>Delete</button>
+			<button onClick={() => consumer2?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume(2)}>Consume2</button>
 
 			{records2.map((record, i) => (
@@ -94,7 +128,13 @@ export default function App() {
 				</div>
 			))}
 
+			<br /><br />
+			<input ref={keyInputRef} type="text" placeholder='Key' />
 			<br />
+			<input ref={valueInputRef} type="text" placeholder='value' />
+			<br />
+			<button onClick={produce}>Produce</button>
+
 			<a href="http://localhost:4001/oauth2/authorization/github">Login</a>
 		</>
 	)

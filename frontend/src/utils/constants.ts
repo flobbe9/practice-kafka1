@@ -15,10 +15,4 @@ export const REDPANDA_DEFAULT_CONSUMER_LIFE_TIME = 300_000;
 export const REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT = 45_000;
 
 
-/** 
- * Seconds after which to retry a fetch request which has failed with status 503, 429 or 301
- * 
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After
- */
-export const DEFAULT_FETCH_RETRY_AFTER = 2;
 export const AUTHORIIZATION_HEADER_KEY = "Authorization";
