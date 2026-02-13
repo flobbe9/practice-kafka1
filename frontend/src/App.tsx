@@ -40,7 +40,7 @@ export default function App() {
 			.keepAlive(true)
 			.consumerInstanceTimeout(45000));
 	const [consumer2, ] = useState<Consumer>(
-		new Consumer(["test2"], "group2", "consumer2", globalRedpandaConfig)
+		new Consumer(["test"], "group2", "consumer2", globalRedpandaConfig)
 			.keepAlive(true)
 			.consumerInstanceTimeout(45000));
 

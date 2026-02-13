@@ -7,9 +7,7 @@ import { ProducerOffsetFormat } from "./ProducerOffsetFormat";
  */
 export interface ProducerResponseFormat {
     /** 
-     * Not sure how the reponse is formatted exactly. Will return at least one offset for each partition, 
-     * either with or without an `error_code` prop, where not having that prop indicates that the record was 
-     * produced successfully.
+     * Will return at least one offset for each partition, 
      */
     offsets: ProducerOffsetFormat[]
 }

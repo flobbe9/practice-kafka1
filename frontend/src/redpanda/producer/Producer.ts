@@ -51,7 +51,7 @@ export class Producer {
     }
 
     /**
-     * Will produce all valid records. Wont throw if one record could not be produced but continue with the next one. All
+     * Will produce all valid records. Wont throw if one record could not be produced but continues with the next one. All
      * valid records will be produced.
      * 
      * No parsing or modification is done to `records`. The consumer config will decide how to format the record key values.

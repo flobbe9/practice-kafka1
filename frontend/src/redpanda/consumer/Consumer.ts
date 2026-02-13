@@ -12,8 +12,13 @@ import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
  * For retrieving ("consuming") kafka records of certain topics.
  * 
  * Records are only consumed once per group. This means that `consume()` will only ever return the latest "unconsumed" records
- * which no other consumer has yet seen.
+ * which no other consumer in the same group has seen yet.
  * See `Topic` class in order to consume all records of a topic consistently.
+ * 
+ * Within a topic records with the same key are stored on the same partition. But within one consumer group there's only ever one consumer per partition. 
+ * So in order to have multiple consumers in a group consume the same topic, there'd need to be at least as many partitions as consumers. 
+ * If you don't want to be dealing with partitions, simply create every consumer in their own group, this will make sure that every consumer 
+ * can consume each record.
  * 
  * ```
  * const consumer = new Consumer(["myTopic", "myOtherTopic"], "groupName", "consumerName", globalConfig);
