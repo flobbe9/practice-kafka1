@@ -6,6 +6,9 @@ import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
  * @since 0.0.1
  */
 export interface ProducerRecordFormat {
+    /**
+     * Not unique
+     */
     key: RedpandaRecordKeyValueType;
 
     value: RedpandaRecordKeyValueType;

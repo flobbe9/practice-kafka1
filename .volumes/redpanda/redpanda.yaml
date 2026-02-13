@@ -41,6 +41,7 @@ redpanda:
     data_transforms_enabled: true
     superusers:
         - admin
+        - anonymousUser # the spring boot default principalName, if not logged in. Equivalent of creating acl permission for all users (--allow-principal=*)
     http_authentication: ["BASIC", "OIDC"]
     oidc_discovery_url: http://host.docker.internal:4001/.well-known/openid-configuration
     # must match the "aud" claim inside the jwt token

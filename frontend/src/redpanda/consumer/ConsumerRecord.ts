@@ -16,7 +16,11 @@ interface AbstractConsumerRecord {
  * @since 0.0.1
  */
 export interface ConsumerRecord extends AbstractConsumerRecord {
-    /** See also `RedpandaRecordKeyValueFormat` */
+    /** 
+     * See also `RedpandaRecordKeyValueFormat`
+     * 
+     * Not unique
+     */
     key: RedpandaRecordKeyValueType;
 
     /** See also `RedpandaRecordKeyValueFormat` */
@@ -29,7 +33,11 @@ export interface ConsumerRecord extends AbstractConsumerRecord {
  * @since 0.0.1
  */
 export interface ConsumerRecordResponseFormat extends AbstractConsumerRecord {
-    /** See also `RedpandaRecordKeyValueFormat` */
+    /** 
+     * See also `RedpandaRecordKeyValueFormat` 
+     * 
+     * Not unique
+     */
     key: string | null;
 
     /** See also `RedpandaRecordKeyValueFormat` */

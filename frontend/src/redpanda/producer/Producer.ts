@@ -57,7 +57,7 @@ export class Producer {
      * No parsing or modification is done to `records`. The consumer config will decide how to format the record key values.
      * 
      * @param records `records` array may be empty 
-     * @returns one offset for each partition, either with or without an `error_code` prop. `null` if no records were produced and no error was thrown (e.g. when `records` is empty)
+     * @returns one offset for each partition. An `error_code` prop indicates that the record could not be produced. `null` if no records were produced and no error was thrown (e.g. when `records` is empty)
      * See {@link ProducerResponseFormat}
      * @throws if response status is not-alright or arg is strictly falsy. 
      * @see https://github.com/redpanda-data/redpanda/blob/dev/src/v/kafka/ for `error_code`s

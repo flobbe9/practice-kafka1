@@ -1,4 +1,12 @@
 # Run
+- create super user and spring's unauthenticated default user for testing
+    - `rpk security user create admin -p "password" --mechanism SCRAM-SHA-256`
+    - `rpk security user create anonymousUser -p "password" --mechanism SCRAM-SHA-256`
+- create a first test topic
+    - ```rpk topic create test \
+        -X user=anonymousUser \
+        -X pass=password \
+        -X sasl.mechanism=SCRAM-SHA-256```
 - add the console user to the redpanda service once (or on every startup if not usinga volume for /data):
     `rpk security user create <user> -p "<password>" --mechanism SCRAM-SHA-256`
     - credentials must match "redpanda.console-config.yaml" file
@@ -26,7 +34,7 @@ rpk security acl create --operation all --topic=* --allow-principal=<principal-n
 ```
 - Give all users permission to read, write and describe any topic:
 ```
-rpk security acl create --operation read,write,describe,create --topic=* --allow-principal=* \
+rpk security acl create --operation read,write,describe --topic=* --allow-principal=* \
 -X user=<super-user> \
 -X pass=<super-user-password> \
 -X sasl.mechanism=SCRAM-SHA-256
@@ -50,6 +58,14 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
+## list acls
+```
+rpk security acl list --allow-principal=<principal-name> \
+-X user=<super-user> \
+-X pass=<super-user-password> \
+-X sasl.mechanism=SCRAM-SHA-256
+```
+
 # offsets
 - Delete offset for groups:
     - `rpk group offset-delete <group> --from-file <fileName>`
@@ -66,6 +82,13 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
         -X pass=<super-user-password> \
         -X sasl.mechanism=SCRAM-SHA-256
     - https://docs.redpanda.com/current/reference/rpk/rpk-group/rpk-group-offset-delete/
+
+# create topic
+- ```rpk topic create <topic-name> \
+    -X user=<super-user> \
+    -X pass=<super-user-password> \
+    -X sasl.mechanism=SCRAM-SHA-256```
+
 
 # Notes
 - consumers are lost upon redpanda container recreation (at least when running "compose down")

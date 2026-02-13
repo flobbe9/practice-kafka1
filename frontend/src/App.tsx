@@ -4,8 +4,9 @@ import { ConsumerRecord } from './redpanda/consumer/ConsumerRecord';
 import { RedpandaConfig } from './redpanda/RedpandaConfig';
 import { RedpandaJwtAuthConfig } from './redpanda/RedpandaJwtAuthConfig';
 import { RedpandaRecordKeyValueType } from './redpanda/RedpandaRecordKeyValueType';
-import { isHttpStatusCodeAlright, throwApiException } from './utils/utils';
+import { catchApiException, isHttpStatusCodeAlright, throwApiException } from './utils/utils';
 import { Producer } from './redpanda/producer/Producer';
+import { logDebug } from './../test/src/utils';
 
 const globalRedpandaConfig: RedpandaConfig = {
 	baseUrl: 'http://localhost:8091',
@@ -44,7 +45,7 @@ export default function App() {
 			.consumerInstanceTimeout(45000));
 
 	const [producer, ] = useState<Producer>(
-		new Producer("testt", globalRedpandaConfig)
+		new Producer("test", globalRedpandaConfig)
 	)
 	const keyInputRef = useRef<HTMLInputElement>(null);
 	const valueInputRef = useRef<HTMLInputElement>(null);
@@ -64,12 +65,17 @@ export default function App() {
 
 	async function consume(num: 1 | 2 = 1): Promise<any> {
 		// setInterval(async () => {
-			if (num === 1) {
-				const response = await consumer?.consume();
-				setRecords((records) => [...records, ...(response ?? [])]);
-			} else {
-				const response = await consumer2?.consume();
-				setRecords2((records) => [...records, ...(response ?? [])]);	
+			try {
+				if (num === 1) {
+					const response = await consumer?.consume();
+					setRecords((records) => [...records, ...(response ?? [])]);
+				} else {
+					const response = await consumer2?.consume();
+					setRecords2((records) => [...records, ...(response ?? [])]);	
+				}
+			} catch (e) {
+				const apiException = catchApiException(e);
+				logDebug(apiException);
 			}
 
 		// }, 2000);
@@ -83,28 +89,33 @@ export default function App() {
 	}
 
 	async function produce(): Promise<any> {
-		await producer.produce({
-			records: [
-				{
-					key: keyInputRef.current?.value || null,
-					value: valueInputRef.current?.value || null,
-				},
-				{
-					key: keyInputRef.current?.value || null,
-					value: valueInputRef.current?.value || null,
-					partition: 1
-				},
-				{
-					key: keyInputRef.current?.value || null,
-					value: "2",
-					partition: 2
-				},
-				{
-					key: keyInputRef.current?.value || null,
-					value: "3",
-				}
-			]
-		})
+		try {
+			await producer.produce({
+				records: [
+					{
+						key: keyInputRef.current?.value || null,
+						value: valueInputRef.current?.value || null,
+					},
+					{
+						key: keyInputRef.current?.value || null,
+						value: valueInputRef.current?.value || null,
+						partition: 1
+					},
+					{
+						key: keyInputRef.current?.value || null,
+						value: "2",
+						partition: 2
+					},
+					{
+						key: keyInputRef.current?.value || null,
+						value: "3",
+					}
+				]
+			})
+		} catch (e) {
+			const apiException = catchApiException(e);
+			logDebug(apiException);
+		}
 	}
 
 	return (
