@@ -4,7 +4,7 @@ import { RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
 import { ProducerRecordsFormat } from "./ProducerRecordsFormat";
 import { ProducerResponse } from "./ProducerResponse";
-import { isProducerResponseFormat, ProducerResponseFormat } from "./ProducerResponseFormat";
+import { ProducerResponseFormat } from "./ProducerResponseFormat";
 
 /**
  * For producing records for one specific topic.
@@ -70,16 +70,13 @@ export class Producer {
 
         const path = `/topics/${this.topic}`;
 
-        const response = await this.redpandaFetcher.fetch(path, {
+        const response = await this.redpandaFetcher.fetch<ProducerResponseFormat>(path, {
             method: "POST",
             body: JSON.stringify(records),
             headers: {
                 "Content-Type": MEDIA_TYPE_KAFKA_JSON_JSON
             }
         });
-
-        if (!isProducerResponseFormat(response))
-            throw new Error(`Unexpected producer response format: ${JSON.stringify(response)}.`);
 
         const hasFaltyRecords = !!response.offsets
             .find(offset => Object.hasOwn(offset, "error_code"));

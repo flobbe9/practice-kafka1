@@ -11,7 +11,3 @@ export interface ProducerResponseFormat {
      */
     offsets: ProducerOffsetFormat[]
 }
-
-export function isProducerResponseFormat(responseFormat: object): responseFormat is ProducerResponseFormat {
-    return !!responseFormat && Object.hasOwn(responseFormat, "offsets");
-}

@@ -1,4 +1,4 @@
-import { assertStrictlyFalsyAndThrow, catchApiException, randomString } from "@/utils/utils";
+import { assertStrictlyFalsyAndThrow, catchApiException, isBlank, randomString } from "@/utils/utils";
 import { Consumer } from "../consumer/Consumer";
 import { ConsumerOptions } from "../consumer/ConsumerOptions";
 import { ConsumerRecord } from "../consumer/ConsumerRecord";
@@ -21,6 +21,9 @@ export class Topic {
     constructor(topic: string, redpandaConfig: RedpandaConfig,) {
         assertStrictlyFalsyAndThrow(topic, redpandaConfig);
 
+        if (isBlank(topic))
+            throw new Error(`'topic' cannot be blank`);
+        
         this.topic = topic;
         this.redpandaConfig = redpandaConfig;
         this.redpandaFetcher = new RedpandaFetcher(redpandaConfig);
