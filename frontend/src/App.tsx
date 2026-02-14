@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { JSX, useEffect, useRef, useState } from 'react';
 import { Consumer } from './redpanda/consumer/Consumer';
 import { ConsumerRecord } from './redpanda/consumer/ConsumerRecord';
+import { Producer } from './redpanda/producer/Producer';
 import { RedpandaConfig } from './redpanda/RedpandaConfig';
 import { RedpandaJwtAuthConfig } from './redpanda/RedpandaJwtAuthConfig';
 import { RedpandaRecordKeyValueType } from './redpanda/RedpandaRecordKeyValueType';
+import { Topic } from './redpanda/topic/Topic';
 import { catchApiException, isHttpStatusCodeAlright, throwApiException } from './utils/utils';
-import { Producer } from './redpanda/producer/Producer';
-import { logDebug } from './../test/src/utils';
 
 const globalRedpandaConfig: RedpandaConfig = {
 	baseUrl: 'http://localhost:8091',
@@ -33,6 +33,8 @@ const globalRedpandaConfig: RedpandaConfig = {
 export default function App() {
 	const [records, setRecords] = useState<ConsumerRecord[]>([]);
 	const [records2, setRecords2] = useState<ConsumerRecord[]>([]);
+	const [allRecords, setAllRecords] = useState<ConsumerRecord[]>([]);
+	const [allTopics, setAllTopics] = useState<string[]>([]);
 	const [consumerInitialized, setConsumerInitialized] = useState(false);
 
 	const [consumer, ] = useState<Consumer>(
@@ -47,6 +49,9 @@ export default function App() {
 	const [producer, ] = useState<Producer>(
 		new Producer("test", globalRedpandaConfig)
 	)
+
+	const [topic, ] = useState<Topic>(new Topic("test", globalRedpandaConfig));
+
 	const keyInputRef = useRef<HTMLInputElement>(null);
 	const valueInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +68,36 @@ export default function App() {
 		setConsumerInitialized(true);
 	}
 
+	async function fetchAllTopics(): Promise<void> {
+		try {
+			setAllTopics(await Topic.allTopics(globalRedpandaConfig));
+
+		} catch (e) {
+			const apiException = catchApiException(e);
+			console.error("Failed to fetch all records", apiException);
+		}
+	}
+
+	async function fetchAllRecords(): Promise<void> {
+		try {
+			setAllRecords(await topic.allRecords());
+
+		} catch (e) {
+			const apiException = catchApiException(e);
+			console.error("Failed to fetch all records", apiException);
+		}
+	}
+
+	async function fetchAllRecordsOnPartition(): Promise<void> {
+		try {
+			setAllRecords(await topic.allRecordsByPartition(0));
+
+		} catch (e) {
+			const apiException = catchApiException(e);
+			console.error("Failed to fetch all records", apiException);
+		}
+	}
+
 	async function consume(num: 1 | 2 = 1): Promise<any> {
 		// setInterval(async () => {
 			try {
@@ -75,7 +110,7 @@ export default function App() {
 				}
 			} catch (e) {
 				const apiException = catchApiException(e);
-				logDebug(apiException);
+				console.error(apiException);
 			}
 
 		// }, 2000);
@@ -114,8 +149,19 @@ export default function App() {
 			})
 		} catch (e) {
 			const apiException = catchApiException(e);
-			logDebug(apiException);
+			console.log(apiException);
 		}
+	}
+
+	function mapConsumerRecords(consumerRecords: ConsumerRecord[]): JSX.Element[] {
+		if (!consumerRecords)
+			return [];
+
+		return consumerRecords.map((record, i) => (
+			<div key={i}>
+				<span>Key: {toString(record.key)} Value: {toString(record.value)}</span>
+			</div>
+		));
 	}
 
 	return (
@@ -123,21 +169,22 @@ export default function App() {
 			<button onClick={() => consumer?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume()}>Consume1</button>
 
-			{records.map((record, i) => (
-				<div key={i}>
-					<span>Key: {toString(record.key)} Value: {toString(record.value)}</span>
-				</div>
-			))}
+			{mapConsumerRecords(records)}
 
 			<br /><br />
 			<button onClick={() => consumer2?.delete()}>Delete</button>
 			<button disabled={!consumerInitialized} onClick={() => consume(2)}>Consume2</button>
 
-			{records2.map((record, i) => (
-				<div key={i}>
-					<span>Key: {toString(record.key)} Value: {toString(record.value)}</span>
-				</div>
-			))}
+			{mapConsumerRecords(records2)}
+
+			<br /><br />
+			<button onClick={() => fetchAllRecords()}>All records for test</button>
+			<button onClick={() => fetchAllRecordsOnPartition()}>All records for test on partition 0</button>
+			{mapConsumerRecords(allRecords)}
+
+			<br /><br />
+			<button onClick={() => fetchAllTopics()}>All topics</button>
+			{allTopics.map((topic, i) => (<div key={i}>{topic} <br /></div>))}
 
 			<br /><br />
 			<input ref={keyInputRef} type="text" placeholder='Key' />

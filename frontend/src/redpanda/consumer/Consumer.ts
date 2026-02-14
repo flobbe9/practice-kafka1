@@ -205,7 +205,7 @@ export class Consumer {
         if (consumerOptions.dontDecodeKeyValues)
             return response;
 
-        return this.parseConsumerResponse(response);
+        return Consumer.parseConsumerResponse(response);
     }
 
     /**
@@ -214,7 +214,7 @@ export class Consumer {
      * @param consumerResponse unmodified json response body returned by consumer request
      * @returns consumed records with parsed `key` and `value`
      */
-    private parseConsumerResponse(consumerResponse: ConsumerRecordResponseFormat[]): ConsumerRecord[] {
+    public static parseConsumerResponse(consumerResponse: ConsumerRecordResponseFormat[]): ConsumerRecord[] {
         assertStrictlyFalsyAndThrow(consumerResponse);
 
         if (!consumerResponse.length)
@@ -246,7 +246,7 @@ export class Consumer {
      * @returns parsed key value
      * @throws if json parse error or falsy arg
      */
-    private parseConsumerKeyValue(keyValue: string | null): RedpandaRecordKeyValueType {
+    private static parseConsumerKeyValue(keyValue: string | null): RedpandaRecordKeyValueType {
         if (keyValue === null)
             return null;
 

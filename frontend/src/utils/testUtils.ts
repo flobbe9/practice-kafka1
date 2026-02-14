@@ -72,10 +72,13 @@ export async function expectAsyncNotToThrow(asyncCallback: () => Promise<any>): 
     let actualError = null;
     try {
         await asyncCallback();
+
     } catch (e) {
         actualError = e;
-    }
-
-    if (actualError)
         throw new Error(`Expected asnc callback not to throw but threw: ${actualError}`);
+
+    } finally {
+        if (actualError && actualError instanceof Error)
+            console.log((actualError as Error).stack);
+    }
 }

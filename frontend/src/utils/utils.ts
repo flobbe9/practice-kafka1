@@ -24,6 +24,8 @@ export function isStrictlyFalsy(obj: any): boolean {
  * Throws at the first arg beeing strictly falsy (but not if no args are specified). 
  *
  * @param args to check
+ * @see {@link isStrictlyFalsy}
+ * @see {@link isNumberStrictlyFalsy}
  */
 export function assertStrictlyFalsyAndThrow(...args: any[]): void {
     if (!args || !args.length) 
@@ -130,3 +132,26 @@ export function isBlank(str: string | undefined | null): boolean {
 
     return str.length === 0;
 }
+
+/**
+ * @return a random hex string of 13 chars
+ */
+export function randomString(): string {
+    return (Math.random()).toString(16).substring(2);
+}
+
+/**
+ * Await a promise that resolves after given delay with given ```resolveValue```.
+ * 
+ * @param delay in ms
+ * @param resolveValue value passed to ```res``` callback 
+ * @returns ```resolveValue``` or ```undefined```
+ */
+export async function sleep<T>(delay: number, resolveValue?: T): Promise<T | undefined> {
+
+    return await new Promise((res, ) => {
+        setTimeout(() => {
+            res(resolveValue);
+        }, delay);
+    });
+} 

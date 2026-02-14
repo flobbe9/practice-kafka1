@@ -31,6 +31,7 @@ export class RedpandaFetcher {
     /**
      * Fetch `{redpandaConfig.baseUrl}/{path}`.
      * 
+     * @type `T` expected return type. Default is `any`
      * @param path may include query params. Does not care about starting or trailing slashes
      * @param fetchConfig 
      * @param refetchAuthIf401 indicates to refresh auth token and refetch if 401 status. Default is `true`
@@ -39,7 +40,7 @@ export class RedpandaFetcher {
      * 
      * May also throw a normal Error if an arg is strcitly falsy or for unhandled errors.
      */
-    public async fetch(path: string, fetchConfig: RequestInit = {}, refetchAuthIf401 = true): Promise<any> {
+    public async fetch<T = any>(path: string, fetchConfig: RequestInit = {}, refetchAuthIf401 = true): Promise<T> {
         assertStrictlyFalsyAndThrow(path);
 
         // wont refetch on 401 if the auth header is already defined
