@@ -1,0 +1,37 @@
+{
+    "name": "redpanda",
+    "version": "0.0.1",
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc -b",
+        "test-build": "jest -- ./src && tsc -b"
+    },
+    "dependencies": {
+        "buffer": "^6.0.3"
+    },
+    "devDependencies": {
+        "@types/jest": "^30.0.0",
+        "@types/node": "^24.10.4",
+        "jest": "^30.2.0",
+        "ts-jest": "^29.4.6",
+        "typescript": "~5.9.3"
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "transform": {
+            "node_modules/variables/.+\\.(j|t)sx?$": "ts-jest"
+        },
+        "transformIgnorePatterns": [
+            "node_modules/(?!variables/.*)"
+        ],
+        "moduleNameMapper": {
+            "^@/(.*)$": "<rootDir>/src/$1"
+        }
+    }
+}

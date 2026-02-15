@@ -1,0 +1,1 @@
+export { Consumer } from './src/kafka/consumer/Consumer';
