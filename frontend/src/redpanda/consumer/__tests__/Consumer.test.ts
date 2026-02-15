@@ -8,17 +8,33 @@ import { ConsumerRecordResponseFormat } from "../ConsumerRecord";
 
 const mockRedpandaConfig: RedpandaConfig = {
     baseUrl: "http://mockHost",
-    authConfig: RedpandaBasicAuthConfig.getInstance("user", "password")
+    authConfig: RedpandaBasicAuthConfig.getInstance("user", "password"),
 };
 
 
 describe("startConsumerKeepAlive", () => {
+    test("should validate consumer name and group name", () => {
+        let consumerName = "testConsumer";
+        let groupName = "testGroup";
+
+        expect(() => {new Consumer([], groupName, consumerName, mockRedpandaConfig)}).not.toThrow();
+        expect(() => {new Consumer([], "invalid$", consumerName, mockRedpandaConfig)}).toThrow();
+        expect(() => {new Consumer([], groupName, "invalid$", mockRedpandaConfig)}).toThrow();
+
+        let tooLongName = ""
+        while (tooLongName.length <= 256)
+            tooLongName += "a";
+
+        expect(() => {new Consumer([], tooLongName, consumerName, mockRedpandaConfig)}).toThrow();
+        expect(() => {new Consumer([], groupName, tooLongName, mockRedpandaConfig)}).toThrow();
+    });
+
     test("should not start interval if delay to low", async () => {
         mockFetchJson(undefined, {}, 200);
         console.warn = jest.fn((..._args: any[]) => {});
 
         const goodDelay = REDPANDA_DEFAULT_CONSUMER_LIFE_TIME - 3000;
-        let expectedWarningMsg = `Not keeping consumer alive because 'consumerInstanceTimeout' is too low: ${goodDelay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`;
+        let expectedWarningMsg = `Not keeping consumer alive because either 'consumerInstanceTimeout' or 'sessionTimeout' is too low: ${goodDelay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`;
 
         // consumer timeout high enough (using default value of 300_000ms)
         let consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);

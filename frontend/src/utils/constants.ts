@@ -16,3 +16,8 @@ export const REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT = 45_000;
 
 
 export const AUTHORIIZATION_HEADER_KEY = "Authorization";
+
+/** Defined by kafka */
+export const TOPIC_REGEX = /^[a-zA-Z0-9_\.\-]{1,249}$/;
+/** This limitation is motivated by url safety and does not come from kafka. */
+export const CONSUMER_AND_GROUP_REGEX = /^[-a-zA-Z0-9@:%._\+~#=]{1,256}$/;

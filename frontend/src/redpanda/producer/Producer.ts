@@ -5,6 +5,7 @@ import { RedpandaFetcher } from "../RedpandaFetcher";
 import { ProducerRecordsFormat } from "./ProducerRecordsFormat";
 import { ProducerResponse } from "./ProducerResponse";
 import { ProducerResponseFormat } from "./ProducerResponseFormat";
+import { Topic } from "../topic/Topic";
 
 /**
  * For producing records for one specific topic.
@@ -42,6 +43,7 @@ export class Producer {
 
     constructor(topic: string, redpandaConfig: RedpandaConfig) {
         assertStrictlyFalsyAndThrow(topic, redpandaConfig);
+        Topic.assertTopicRegexValid(topic);
 
         if (isBlank(topic))
             throw new Error(`'topic' cannot be blank`);

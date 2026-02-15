@@ -1,11 +1,12 @@
-import { assertStrictlyFalsyAndThrow, catchApiException, isBlank, randomString } from "@/utils/utils";
+import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_REQUEST_TIMEOUT, TOPIC_REGEX } from "@/utils/constants";
+import { regexToString } from "@/utils/projectUtils";
+import { assertStrictlyFalsyAndThrow, catchApiException, randomString } from "@/utils/utils";
 import { Consumer } from "../consumer/Consumer";
 import { ConsumerOptions } from "../consumer/ConsumerOptions";
 import { ConsumerRecord } from "../consumer/ConsumerRecord";
 import { RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
 import { AllTopicRecordsByPartitionOptions } from "./AllTopicRecordsByPartitionOptions";
-import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from "@/utils/constants";
 
 /**
  * @since 0.0.1
@@ -20,10 +21,8 @@ export class Topic {
 
     constructor(topic: string, redpandaConfig: RedpandaConfig,) {
         assertStrictlyFalsyAndThrow(topic, redpandaConfig);
+        Topic.assertTopicRegexValid(topic);
 
-        if (isBlank(topic))
-            throw new Error(`'topic' cannot be blank`);
-        
         this.topic = topic;
         this.redpandaConfig = redpandaConfig;
         this.redpandaFetcher = new RedpandaFetcher(redpandaConfig);
@@ -106,5 +105,20 @@ export class Topic {
                 "Accept": MEDIA_TYPE_KAFKA_JSON
             }
         });
+    }
+
+    /**
+     * Validate {@link topic} and throw if it's invalid
+     * 
+     * @param topic to validate
+     * @throws if `topic` is invalid
+     * @see {@link TOPIC_REGEX}
+     */
+    public static assertTopicRegexValid(topic: string): void | never {
+        if (!topic)
+            throw new Error(`topic is falsy: ${topic}`);
+
+        if (topic.match(TOPIC_REGEX) === null)
+            throw new Error(`topic '${topic}' has to match pattern: ${regexToString(TOPIC_REGEX)}`)
     }
 }

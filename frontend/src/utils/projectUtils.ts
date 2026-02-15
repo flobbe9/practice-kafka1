@@ -47,3 +47,15 @@ export function trim(str: string, char: string): string {
 
     return str;
 }
+
+/**
+ * @param regex to convert to string
+ * @returns string of regex removing some javascript specific chars
+ */
+export function regexToString(regex: RegExp): string {
+    if (!regex)
+        return regex;
+
+    return (regex + "")
+        .replaceAll("/", "");
+}

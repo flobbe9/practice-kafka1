@@ -1,10 +1,10 @@
 import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
-import { base64Decode } from "@/utils/projectUtils";
+import { base64Decode, regexToString } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, catchApiException, isStrictlyFalsy } from "@/utils/utils";
 import { type RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
 import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
-import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
+import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from './../../utils/constants';
 import { ConsumerOptions } from "./ConsumerOptions";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
@@ -75,6 +75,8 @@ export class Consumer {
      */
     public constructor(topics: string[], groupName: string, name: string, redpandaConfig: RedpandaConfig) {
         assertStrictlyFalsyAndThrow(topics, groupName, name, redpandaConfig);
+        Consumer.assertConsumerNameOrGroupNameValid(groupName);
+        Consumer.assertConsumerNameOrGroupNameValid(name);
 
         this._topics = topics;
         this._groupName = groupName;
@@ -377,5 +379,18 @@ export class Consumer {
 
         clearInterval(this.keepAliveIntervalId);
         this.keepAliveIntervalId = undefined;
+    }
+
+    /**
+     * @param name consumer name or group name to validate
+     * @throws if `name` is invalid
+     * @see {@link CONSUMER_AND_GROUP_REGEX}
+     */
+    private static assertConsumerNameOrGroupNameValid(name: string): void | never {
+        if (!name)
+            throw new Error(`'name' is falsy: ${name}`);
+
+        if (name.match(CONSUMER_AND_GROUP_REGEX) === null)
+            throw new Error(`'name' '${name}' has to match pattern: ${regexToString(CONSUMER_AND_GROUP_REGEX)}`)
     }
 }

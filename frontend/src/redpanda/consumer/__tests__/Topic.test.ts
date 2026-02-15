@@ -14,6 +14,19 @@ const mockRedpandaConfig: RedpandaConfig = {
 };
 
 describe("allRecords", () => {
+    test("should validate topic name", () => {
+        let topicName = "testGroup";
+
+        expect(() => {new Topic(topicName, mockRedpandaConfig)}).not.toThrow();
+        expect(() => {new Topic("invalid$", mockRedpandaConfig)}).toThrow();
+
+        let tooLongName = ""
+        while (tooLongName.length <= 249)
+            tooLongName += "a";
+
+        expect(() => {new Topic(tooLongName, mockRedpandaConfig)}).toThrow();
+    });
+
     test("should delete consumer after consume call", async () => {
         mockFetchJson();
 

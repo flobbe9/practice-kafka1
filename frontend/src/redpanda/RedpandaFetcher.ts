@@ -53,7 +53,7 @@ export class RedpandaFetcher {
 
         let response: Response | null = null;
         try {
-            response = await globalThis.fetch(url, fetchConfig);
+            response = await fetch(url, fetchConfig);
 
         // case: failed to fetch (503)
         } catch (e) {
