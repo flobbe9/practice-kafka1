@@ -1,10 +1,10 @@
 import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
 import { base64Decode, regexToString } from "@/utils/projectUtils";
-import { assertStrictlyFalsyAndThrow, catchApiException, isStrictlyFalsy } from "@/utils/utils";
+import { assertStrictlyFalsyAndThrow, catchApiException, getTimeStamp, isStrictlyFalsy } from "@/utils/utils";
+import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '../../utils/constants';
 import { type RedpandaConfig } from "../RedpandaConfig";
 import { RedpandaFetcher } from "../RedpandaFetcher";
 import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
-import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '../../utils/constants';
 import { ConsumerOptions } from "./ConsumerOptions";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
@@ -159,7 +159,7 @@ export class Consumer {
     /**
      * Time (in ms) of inactivity after which a consumer session becomes invalid (session.timeout.ms)
      * 
-     * Default is `REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT`
+     * Default is {@link REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT}
      * 
      * @see https://kafka.apache.org/34/configuration/consumer-configs/#consumerconfigs_session.timeout.ms
      */
@@ -290,8 +290,10 @@ export class Consumer {
      * Configure the group with an initial offset of 0 for the first consumer to retrieve all records when consuming the first time.
      * 
      * Will not throw if consumer already exists.
+     * 
+     * @return fetch response. Will set 204 status if consumer already exists
      */
-    private async create(): Promise<void> {
+    private async create(): Promise<CustomApiResponseFormat> {
         const path = `/consumers/${this._groupName}`;
         const body = {
             "format": "binary",
@@ -316,7 +318,12 @@ export class Consumer {
 
             // case: consumer already exists, nothing else to do
             if (apiException.statusCode === 409)
-                return Promise.resolve();
+                return {
+                    statusCode: 204,
+                    message: "NO_CONTENT",
+                    path: `/${path}`,
+                    timestamp: getTimeStamp()
+                }
 
             throw e;
         }

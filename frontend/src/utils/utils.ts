@@ -1,4 +1,3 @@
-import { isCustomApiResponseFormat, type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
 
 /**
  * @param statusCode http status code to check
@@ -44,43 +43,6 @@ export function assertStrictlyFalsyAndThrow(...args: any[]): void {
         if (falsy) 
             throw new Error(`Invalid arg at index ${i}`);
     }
-}
-
-export function throwApiException(exception: CustomApiResponseFormat): never {
-    if (!exception || isNaN(exception.statusCode))
-        throw new Error(`Invalid api response format: ${exception}`);
-        
-    throw new Error(JSON.stringify(exception));
-}
-
-/**
- * Expects `e` to be an `Error` object with a stringified `CustomApiResponseFormat` as `message`.
- * 
- * Will simply throw `e` if `e.message` is not formatted as expected.
- * 
- * @param e error that was caught 
- * @returns the thrown api response format
- */
-export function catchApiException(e: any): CustomApiResponseFormat {
-    if (!e || !(e instanceof Error)) {
-        console.error(`Failed to catch api exception. Invalid arg:`);
-        throw e;
-    }
-
-    try {
-        const apiResponseFormat = JSON.parse(e.message);
-
-        // case: valid json string but not a valid customApiResponseFormat
-        if (!isCustomApiResponseFormat(apiResponseFormat))
-            throw new Error(`Invalid api response format: ${e.message}`);
-
-        return apiResponseFormat;
-
-    // case: e.message is not a customApiResponseFormat 
-    } catch (e2) {
-        console.error(`Failed to parse api exception format with error: `, e2);
-        throw e;
-    } 
 }
 
 /**

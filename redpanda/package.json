@@ -1,16 +1,13 @@
 {
     "name": "redpanda",
     "version": "0.0.1",
-    "files": [
-        "dist"
-    ],
     "type": "module",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "index.js",
+    "types": "index.d.ts",
     "license": "MIT",
     "scripts": {
-        "build": "tsc -b",
-        "test-build": "jest -- ./src && tsc -b"
+        "build": "tsc -b && jest -- ./src && tsc-alias && shx cp ./package.json ./dist",
+        "build-omit-tests": "tsc -b && tsc-alias && shx cp ./package.json ./dist"
     },
     "dependencies": {
         "buffer": "^6.0.3"
@@ -19,7 +16,9 @@
         "@types/jest": "^30.0.0",
         "@types/node": "^24.10.4",
         "jest": "^30.2.0",
+        "shx": "^0.4.0",
         "ts-jest": "^29.4.6",
+        "tsc-alias": "^1.8.16",
         "typescript": "~5.9.3"
     },
     "jest": {

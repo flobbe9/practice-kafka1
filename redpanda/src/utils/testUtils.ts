@@ -82,3 +82,18 @@ export async function expectAsyncNotToThrow(asyncCallback: () => Promise<any>): 
             console.log((actualError as Error).stack);
     }
 }
+
+/**
+ * Override `setInterval` with a mock function which simply logs and always returns 1.
+ * 
+ * @param callback execute in mock function
+ */
+export function mockSetInterval(callback?: (_handler: TimerHandler, timeout?: number, ..._arguments: any[]) => void): void {
+    global.setInterval = jest.fn((_handler: TimerHandler, timeout?: number, ..._arguments: any[]) => {
+        if (callback)
+            callback(_handler, timeout, ..._arguments);
+
+        console.log("set mock interval", timeout);
+        return 1 as any; // should be NodeJS.Timeout
+    });
+}

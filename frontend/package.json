@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
+    "redpanda": "../redpanda/dist",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

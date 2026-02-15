@@ -1,9 +1,8 @@
 import { RedpandaBasicAuthConfig } from "@/kafka/RedpandaBasicAuthConfig";
 import { RedpandaConfig } from "@/kafka/RedpandaConfig";
-import { REDPANDA_DEFAULT_CONSUMER_LIFE_TIME } from "@/utils/constants";
-import { expectAsyncNotToThrow, expectAsyncToThrow, mockFetchJson } from "@/utils/testUtils";
-import { Consumer } from "../Consumer";
 import { base64Encode } from "@/utils/projectUtils";
+import { expectAsyncNotToThrow, expectAsyncToThrow, mockFetchJson, mockSetInterval } from "@/utils/testUtils";
+import { Consumer } from "../Consumer";
 import { ConsumerRecordResponseFormat } from "../ConsumerRecord";
 
 const mockRedpandaConfig: RedpandaConfig = {
@@ -29,25 +28,30 @@ describe("startConsumerKeepAlive", () => {
         expect(() => {new Consumer([], groupName, tooLongName, mockRedpandaConfig)}).toThrow();
     });
 
-    test("should not start interval if delay to low", async () => {
+    
+    test("should start interval", async () => {
         mockFetchJson(undefined, {}, 200);
         console.warn = jest.fn((..._args: any[]) => {});
-
-        const goodDelay = REDPANDA_DEFAULT_CONSUMER_LIFE_TIME - 3000;
-        let expectedWarningMsg = `Not keeping consumer alive because either 'consumerInstanceTimeout' or 'sessionTimeout' is too low: ${goodDelay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`;
+        mockSetInterval();
 
         // consumer timeout high enough (using default value of 300_000ms)
         let consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);
         await consumer.init();
-        expect(console.warn).not.toHaveBeenCalledWith(expectedWarningMsg);
+
+        expect(setInterval).toHaveBeenCalled();
+    });
+
+    test("should not start interval if delay to low", async () => {
+        mockFetchJson(undefined, {}, 200);
+        console.warn = jest.fn((..._args: any[]) => {});
+        mockSetInterval();
 
         const badDelay = 2000;
-        consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);
+        const consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);
         consumer.consumerInstanceTimeout(badDelay + 3000); // too low
         await consumer.init();
 
-        expectedWarningMsg = expectedWarningMsg.replace(String(goodDelay), String(badDelay));
-        expect(console.warn).toHaveBeenCalledWith(expectedWarningMsg);
+        expect(setInterval).not.toHaveBeenCalled();
     })
 });
 

@@ -1,12 +1,6 @@
 import { JSX, useEffect, useRef, useState } from 'react';
-import { Consumer } from './redpanda/consumer/Consumer';
-import { ConsumerRecord } from './redpanda/consumer/ConsumerRecord';
-import { Producer } from './redpanda/producer/Producer';
-import { RedpandaConfig } from './redpanda/RedpandaConfig';
-import { RedpandaJwtAuthConfig } from './redpanda/RedpandaJwtAuthConfig';
-import { RedpandaRecordKeyValueType } from './redpanda/RedpandaRecordKeyValueType';
-import { Topic } from './redpanda/topic/Topic';
-import { catchApiException, isHttpStatusCodeAlright, throwApiException } from './utils/utils';
+import { catchApiException, Consumer, ConsumerRecord, Producer, RedpandaConfig, RedpandaJwtAuthConfig, RedpandaRecordKeyValueType, throwApiException, Topic } from 'redpanda';
+import { isHttpStatusCodeAlright } from './utils/utils';
 
 const globalRedpandaConfig: RedpandaConfig = {
 	baseUrl: 'http://localhost:8091',
@@ -18,15 +12,15 @@ const globalRedpandaConfig: RedpandaConfig = {
 		} catch (e) {
 			throwApiException({
 				statusCode: 503,
-				message: (e as Error).message,
+				message: (e as Error).message, 
 				path: "/jwt"
 			});
 		}
 
-		if (!isHttpStatusCodeAlright(response.status))
-			throwApiException(await response.json()); // expect backend response body to formatted exactly like CustomApiResponseFormat
+		if (!isHttpStatusCodeAlright(response!.status))
+			throwApiException(await response!.json()); // expect backend response body to formatted exactly like CustomApiResponseFormat
 
-		return await response.text();
+		return await response!.text();
 	})
 }
 
@@ -42,7 +36,7 @@ export default function App() {
 			.keepAlive(true)
 			.consumerInstanceTimeout(45000));
 	const [consumer2, ] = useState<Consumer>(
-		new Consumer(["test"], "group2 ", "consumer2", globalRedpandaConfig)
+		new Consumer(["test"], "group2", "consumer2", globalRedpandaConfig)
 			.keepAlive(true)
 			.consumerInstanceTimeout(45000));
 

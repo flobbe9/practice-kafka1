@@ -6,10 +6,8 @@
     "target": "es2022",
     "lib": ["ES2022", "DOM"],
     "types": ["node", "jest"],
-    // "allowJs": true, // TODO
     "resolveJsonModule": true,
     "moduleDetection": "force",
-    // "noEmit": true,
     "isolatedModules": true,
     // "verbatimModuleSyntax": true, // TODO
 
@@ -26,16 +24,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "dist",
-    // "rootDir": "src",
-    // "sourceMap": true,
 
     /** For library building */
     "declaration": true,
-    // "declarationMap": true,
 
     "paths": {
       "@/*": ["./src/*"]
     }
-  },
-  // "include": ["src"]
+  }
 }
