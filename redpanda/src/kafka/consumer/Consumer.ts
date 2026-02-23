@@ -260,8 +260,10 @@ export class Consumer {
 
     /**
      * Delete this consumer and stop keep alive interval.
+     * 
+     * @return fetch response. Return with status 204 if consumer did not exist in the first place
      */
-    public async delete(): Promise<void> {
+    public async delete(): Promise<CustomApiResponseFormat> {
         this.stopConsumerKeepAlive();
 
         const path = `/consumers/${this._groupName}/instances/${this._name}`;
@@ -278,7 +280,12 @@ export class Consumer {
 
             // case: consumer did not exist
             if (apiException.statusCode === 404)
-                return Promise.resolve();
+                return {
+                    statusCode: 204,
+                    message: "NO_CONTENT",
+                    path: `/${path}`,
+                    timestamp: getTimeStamp()
+                }
 
             throw e;
         }
