@@ -1,4 +1,4 @@
-# Run
+# Run 
 - create super user and spring's unauthenticated default user for testing
     - `rpk security user create admin -p "password" --mechanism SCRAM-SHA-256`
     - `rpk security user create anonymousUser -p "password" --mechanism SCRAM-SHA-256`
