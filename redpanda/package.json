@@ -6,8 +6,8 @@
     "types": "index.d.ts",
     "license": "MIT",
     "scripts": {
-        "build": "tsc -b && jest -- ./src && tsc-alias && shx cp ./package.json ./dist",
-        "build-omit-tests": "tsc -b && tsc-alias && shx cp ./package.json ./dist"
+        "build": "sh ./build.sh",
+        "build-omit-tests": "sh ./build.sh --omitTests"
     },
     "dependencies": {
         "buffer": "^6.0.3"
