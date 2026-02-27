@@ -3,9 +3,9 @@ import { RedpandaConfig } from "@/kafka/RedpandaConfig";
 import { Topic } from "@/kafka/topic/Topic";
 import { expectAsyncNotToThrow, expectAsyncToThrow, mockFetchJson } from "@/utils/testUtils";
 import { throwApiException } from "@/utils/utils";
-import { Consumer } from "../Consumer";
+import { Consumer } from "@/kafka/consumer/Consumer";
 import { base64Encode } from "@/utils/projectUtils";
-import { ConsumerRecordResponseFormat } from "../ConsumerRecord";
+import { ConsumerRecordResponseFormat } from "@/kafka/consumer/ConsumerRecord";
 
 const topicName = "test";
 const mockRedpandaConfig: RedpandaConfig = {

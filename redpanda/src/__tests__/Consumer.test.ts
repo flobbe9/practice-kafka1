@@ -2,8 +2,8 @@ import { RedpandaBasicAuthConfig } from "@/kafka/RedpandaBasicAuthConfig";
 import { RedpandaConfig } from "@/kafka/RedpandaConfig";
 import { base64Encode } from "@/utils/projectUtils";
 import { expectAsyncNotToThrow, expectAsyncToThrow, mockFetchJson, mockSetInterval } from "@/utils/testUtils";
-import { Consumer } from "../Consumer";
-import { ConsumerRecordResponseFormat } from "../ConsumerRecord";
+import { Consumer } from "@/kafka/consumer/Consumer";
+import { ConsumerRecordResponseFormat } from "@/kafka/consumer/ConsumerRecord";
 
 const mockRedpandaConfig: RedpandaConfig = {
     baseUrl: "http://mockHost",
