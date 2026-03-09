@@ -1,11 +1,11 @@
 import { MEDIA_TYPE_KAFKA_JSON_JSON } from "@/utils/constants";
 import { assertStrictlyFalsyAndThrow, isBlank } from "@/utils/utils";
-import { RedpandaConfig } from "../RedpandaConfig";
-import { RedpandaFetcher } from "../RedpandaFetcher";
-import { ProducerRecordsFormat } from "./ProducerRecordsFormat";
-import { ProducerResponse } from "./ProducerResponse";
-import { ProducerResponseFormat } from "./ProducerResponseFormat";
-import { Topic } from "../topic/Topic";
+import { RedpandaConfig } from "@/kafka/RedpandaConfig";
+import { RedpandaFetcher } from "@/kafka/RedpandaFetcher";
+import { ProducerRecordsFormat } from "@/kafka/producer/ProducerRecordsFormat";
+import { ProducerResponse } from "@/kafka/producer/ProducerResponse";
+import { ProducerResponseFormat } from "@/kafka/producer/ProducerResponseFormat";
+import { Topic } from "@/kafka/topic/Topic";
 
 /**
  * For producing records for one specific topic.

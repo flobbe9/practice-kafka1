@@ -1,12 +1,12 @@
 import { MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_REQUEST_TIMEOUT, TOPIC_REGEX } from "@/utils/constants";
 import { regexToString } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, catchApiException, randomString } from "@/utils/utils";
-import { Consumer } from "../consumer/Consumer";
-import { ConsumerOptions } from "../consumer/ConsumerOptions";
-import { ConsumerRecord } from "../consumer/ConsumerRecord";
-import { RedpandaConfig } from "../RedpandaConfig";
-import { RedpandaFetcher } from "../RedpandaFetcher";
-import { AllTopicRecordsByPartitionOptions } from "./AllTopicRecordsByPartitionOptions";
+import { Consumer } from "@/kafka/consumer/Consumer";
+import { ConsumerOptions } from "@/kafka/consumer/ConsumerOptions";
+import { ConsumerRecord } from "@/kafka/consumer/ConsumerRecord";
+import { RedpandaConfig } from "@/kafka/RedpandaConfig";
+import { RedpandaFetcher } from "@/kafka/RedpandaFetcher";
+import { AllTopicRecordsByPartitionOptions } from "@/kafka/topic/AllTopicRecordsByPartitionOptions";
 
 /**
  * @since 0.0.1

@@ -1,11 +1,11 @@
-import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
+import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat.js";
 import { base64Decode, regexToString } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, catchApiException, getTimeStamp, isStrictlyFalsy } from "@/utils/utils";
-import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '../../utils/constants';
-import { type RedpandaConfig } from "../RedpandaConfig";
-import { RedpandaFetcher } from "../RedpandaFetcher";
-import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
-import { ConsumerOptions } from "./ConsumerOptions";
+import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '@/utils/constants';
+import { type RedpandaConfig } from "@/kafka/RedpandaConfig";
+import { RedpandaFetcher } from "@/kafka/RedpandaFetcher";
+import { RedpandaRecordKeyValueType } from "@/kafka/RedpandaRecordKeyValueType";
+import { ConsumerOptions } from "@/kafka/consumer/ConsumerOptions";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
 /**

@@ -1,4 +1,4 @@
-import { assertStrictlyFalsyAndThrow, isStrictlyFalsy } from "./utils";
+import { assertStrictlyFalsyAndThrow, isStrictlyFalsy } from "@/utils/utils";
 
 /**
  * Replace global `fetch` function with mock function which always resolves with a `Response` object using given args:

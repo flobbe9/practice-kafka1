@@ -1,4 +1,4 @@
-import { ConsumerRecordResponseFormat } from "./ConsumerRecord";
+import { ConsumerRecordResponseFormat } from "@/kafka/consumer/ConsumerRecord";
 
 /**
  * The redapnda response body format for consuming records.

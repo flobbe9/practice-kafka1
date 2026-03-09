@@ -1,4 +1,4 @@
-import type { RedpandaAuthConfig } from "./RedpandaAuthConfig";
+import type { RedpandaAuthConfig } from "@/kafka/RedpandaAuthConfig";
 
 /**
  * Basic configuration for one redpanda instance.

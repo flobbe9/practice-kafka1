@@ -1,4 +1,4 @@
-import { ConsumerOptions } from "../consumer/ConsumerOptions";
+import { ConsumerOptions } from "@/kafka/consumer/ConsumerOptions";
 
 /**
  * Fetch options for fetching all records from one topic by partition. 

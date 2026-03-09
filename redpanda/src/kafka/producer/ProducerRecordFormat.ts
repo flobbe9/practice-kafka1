@@ -1,4 +1,4 @@
-import { RedpandaRecordKeyValueType } from "../RedpandaRecordKeyValueType";
+import { RedpandaRecordKeyValueType } from "@/kafka/RedpandaRecordKeyValueType";
 
 /**
  * Single record passed to the producer request body.

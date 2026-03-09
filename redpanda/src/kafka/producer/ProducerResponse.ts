@@ -1,5 +1,5 @@
-import { ProducerOffsetFormat } from "./ProducerOffsetFormat";
-import { ProducerResponseFormat } from "./ProducerResponseFormat";
+import { ProducerOffsetFormat } from "@/kafka/producer/ProducerOffsetFormat";
+import { ProducerResponseFormat } from "@/kafka/producer/ProducerResponseFormat";
 
 /**
  * Should always specify at least one offset.

@@ -1,4 +1,4 @@
-import { ProducerOffsetFormat } from "./ProducerOffsetFormat";
+import { ProducerOffsetFormat } from "@/kafka/producer/ProducerOffsetFormat";
 
 /**
  * The json response expected from a producer request (successful or not).

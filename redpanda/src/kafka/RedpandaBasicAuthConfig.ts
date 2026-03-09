@@ -1,6 +1,6 @@
 import { base64Encode } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow } from "@/utils/utils";
-import { RedpandaAuthConfig } from "./RedpandaAuthConfig";
+import { RedpandaAuthConfig } from "@/kafka/RedpandaAuthConfig";
 
 /**
  * For using basic auth with plain username and password for redpanda http requests.

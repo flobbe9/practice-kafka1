@@ -1,5 +1,5 @@
 import { assertStrictlyFalsyAndThrow } from "@/utils/utils";
-import { RedpandaRefetchableAuthConfig } from "./RedpandaRefetchableAuthConfig";
+import { RedpandaRefetchableAuthConfig } from "@/kafka/RedpandaRefetchableAuthConfig";
 
 /**
  * Use an jwt bearer token for authorization, e.g. generated from an oidc flow.

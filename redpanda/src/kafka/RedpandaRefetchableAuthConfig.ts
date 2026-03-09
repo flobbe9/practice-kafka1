@@ -1,4 +1,4 @@
-import { RedpandaAuthConfig } from "./RedpandaAuthConfig";
+import { RedpandaAuthConfig } from "@/kafka/RedpandaAuthConfig";
 
 /**
  * Extension to `RedpandaAuthConfig` for an authorization method which retrieves it's auth header value through some sort of promise.

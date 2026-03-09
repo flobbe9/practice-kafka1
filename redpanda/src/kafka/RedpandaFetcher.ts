@@ -1,9 +1,9 @@
 import { hasOwnIgnoreCase, trim } from "@/utils/projectUtils";
 import { assertStrictlyFalsyAndThrow, getTimeStamp, isHttpStatusCodeAlright, throwApiException } from "@/utils/utils";
 import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat";
-import type { RedpandaConfig } from "./RedpandaConfig";
+import type { RedpandaConfig } from "@/kafka/RedpandaConfig";
 import { AUTHORIIZATION_HEADER_KEY } from "@/utils/constants";
-import { RedpandaRefetchableAuthConfig } from "./RedpandaRefetchableAuthConfig";
+import { RedpandaRefetchableAuthConfig } from "@/kafka/RedpandaRefetchableAuthConfig";
 
 /**
  * Use this class for any fetch request to redpanda: 

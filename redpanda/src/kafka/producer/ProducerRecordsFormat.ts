@@ -1,4 +1,4 @@
-import { ProducerRecordFormat } from "./ProducerRecordFormat";
+import { ProducerRecordFormat } from "@/kafka/producer/ProducerRecordFormat";
 
 /**
  * Request body for producer request.

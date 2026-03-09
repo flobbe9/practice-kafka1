@@ -1,4 +1,4 @@
-import { mockFetchJson } from "@/utils/testUtils"
+import { mockFetchJson } from "@/utils/testUtils";
 import { RedpandaFetcher } from "../kafka/RedpandaFetcher";
 import { type RedpandaConfig } from "../kafka/RedpandaConfig";
 import { RedpandaBasicAuthConfig } from "../kafka/RedpandaBasicAuthConfig";
