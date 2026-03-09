@@ -1,0 +1,26 @@
+{
+  "name": "express",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "main": "server.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "dev": "node --env-file=.env --watch-path ./src ./src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "buffer": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
