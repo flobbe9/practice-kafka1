@@ -24,8 +24,9 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-# ensure a clean /dist dir
+# clean build
 if [ $CLEAN_BUILD = "true" ]; then 
+    echo "Clean build: Removing ./dist dir...";
     rm -rf ./dist;
 fi
 
@@ -39,13 +40,23 @@ else
     echo "Omitting tests";
 fi
 
-# modify /dist content
-shx rm -rf dist/src/__tests__;
-shx cp package.json ./dist;
-shx cp README.md ./dist;
-shx cp LICENSE ./dist;
+# modify ./dist content
+echo "> rm -rf ./dist/src/__tests__";
+rm -rf ./dist/src/__tests__;
+
+echo "> ./package.json ./dist";
+cp ./package.json ./dist;
+
+echo "> cp ./README.md ./dist";
+cp ./README.md ./dist;
+
+echo "> cp ./LICENSE ./dist";
+cp ./LICENSE ./dist;
 
 # convert '@' aliase imports to relative paths
+echo "> tsc-alias";
 tsc-alias;
+
 # append '.js' to import statements
+echo "> tsc-esm-fix";
 tsc-esm-fix;

@@ -16,14 +16,13 @@
         "buffer": "^6.0.3"
     },
     "devDependencies": {
-        "tsc-esm-fix": "^3.1.2",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.10.4",
-        "add-js-extension": "^1.0.4",
         "jest": "^30.2.0",
         "shx": "^0.4.0",
         "ts-jest": "^29.4.6",
         "tsc-alias": "^1.8.16",
+        "tsc-esm-fix": "^3.1.2",
         "typescript": "~5.9.3"
     },
     "jest": {

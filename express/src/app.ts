@@ -30,7 +30,7 @@ app.use(express.json());
 
 console.log("Creating consumer 'consumer1'");
 const consumer = new Consumer(["test"], "group1", "consumer1", redpandaConfig)
-.keepAlive(false);
+	.keepAlive(false);
 
 app.get("/", async (_req, res) => {
 	console.log("consume");

@@ -40,7 +40,10 @@ export class Producer {
     
     private redpandaFetcher: RedpandaFetcher;
 
-
+    /**
+     * @param topic to produce records for 
+     * @param redpandaConfig 
+     */
     constructor(topic: string, redpandaConfig: RedpandaConfig) {
         assertStrictlyFalsyAndThrow(topic, redpandaConfig);
         Topic.assertTopicRegexValid(topic);

@@ -1,11 +1,11 @@
 import { type CustomApiResponseFormat } from "@/CustomApiResponseFormat.js";
-import { base64Decode, regexToString } from "@/utils/projectUtils";
-import { assertStrictlyFalsyAndThrow, catchApiException, getTimeStamp, isStrictlyFalsy } from "@/utils/utils";
-import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '@/utils/constants';
 import { type RedpandaConfig } from "@/kafka/RedpandaConfig";
 import { RedpandaFetcher } from "@/kafka/RedpandaFetcher";
 import { RedpandaRecordKeyValueType } from "@/kafka/RedpandaRecordKeyValueType";
 import { ConsumerOptions } from "@/kafka/consumer/ConsumerOptions";
+import { CONSUMER_AND_GROUP_REGEX, MEDIA_TYPE_KAFKA_BINARY_JSON, MEDIA_TYPE_KAFKA_JSON, REDPANDA_DEFAULT_CONSUMER_LIFE_TIME, REDPANDA_DEFAULT_CONSUMER_SESSION_TIMEOUT, REDPANDA_DEFAULT_REQUEST_TIMEOUT } from '@/utils/constants';
+import { base64Decode, regexToString } from "@/utils/projectUtils";
+import { assertStrictlyFalsyAndThrow, catchApiException, getTimeStamp, isStrictlyFalsy } from "@/utils/utils";
 import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
 
 /**
@@ -30,17 +30,20 @@ import { ConsumerRecord, ConsumerRecordResponseFormat } from "./ConsumerRecord";
  *  .consumerInstanceTimeout(200000)
  *  .requestTimeout(2000);
  * 
- * // Initialize once
- * await consumer.init();
- * 
- * // consume latest records:
  * try {
- *  const records = await consumer.consume();
+ *   // Initialize once per instance
+ *   await consumer.init();
+ * 
+ *   // consume latest records:
+ *   const records = await consumer.consume();
+ * 
  * } catch (e) {
  *  const apiException = catchApiException(e);
  *  // handle exception here
  * }
  * ```
+ * 
+ * @since 0.0.1
  */
 export class Consumer {
     private _topics: string[];
