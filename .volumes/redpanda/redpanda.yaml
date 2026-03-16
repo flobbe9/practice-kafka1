@@ -42,12 +42,15 @@ redpanda:
     superusers:
         - admin
         - anonymousUser # the spring boot default principalName, if not logged in. Equivalent of creating acl permission for all users (--allow-principal=*)
+        - console-admin
     http_authentication: ["BASIC", "OIDC"]
     oidc_discovery_url: http://host.docker.internal:4001/.well-known/openid-configuration
     # must match the "aud" claim inside the jwt token
     oidc_token_audience: pandaproxy
     # use the "sub" claim inside the jwt token when naming the oidc "principal"
     oidc_principal_mapping: $.sub
+    # oidc_token_expire_disconnect
+    # oidc_clock_skew_tolerance
     sasl_mechanisms: ["SCRAM", "OAUTHBEARER"]
     enable_sasl: true
 rpk:

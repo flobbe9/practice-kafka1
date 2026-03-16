@@ -1,6 +1,7 @@
-# Run
+# Redpanda general
 - create super user and spring's unauthenticated default user for testing
     - `rpk security user create admin -p "password" --mechanism SCRAM-SHA-256`
+    - `rpk security user create console-admin -p "password" --mechanism SCRAM-SHA-256`
     - `rpk security user create anonymousUser -p "password" --mechanism SCRAM-SHA-256`
 - create a first test topic
     - ```rpk topic create test \
@@ -16,7 +17,7 @@
 - java 25
 - node 24
 
-# Permissions / ACLs
+## Permissions / ACLs
 - General auth: https://docs.redpanda.com/current/manage/security/authentication/#oidc
 - Console authentication: https://docs.redpanda.com/current/console/config/security/authentication
 - Console authorization: https://docs.redpanda.com/current/console/config/security/authorization/
@@ -24,7 +25,7 @@
     - https://docs.redpanda.com/current/manage/security/authorization/acl/
     - https://docs.redpanda.com/current/reference/rpk/rpk-security/rpk-security-acl/
 
-## topic
+### topic
 - Give a user permission to all operations on topics:
 ```
 rpk security acl create --operation all --topic=* --allow-principal=<principal-name> \
@@ -40,7 +41,7 @@ rpk security acl create --operation read,write,describe --topic=* --allow-princi
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
-## groups
+### groups
 - Give all users permission to some operations for any group:
 ```
 rpk security acl create --operation describe,read,create,write --group=* --allow-principal='*' \
@@ -49,7 +50,7 @@ rpk security acl create --operation describe,read,create,write --group=* --allow
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
-## cluster
+### cluster
 - Not sure what exactly this is, but it grants admin users access to ACLs management for console
 ```
 rpk security acl create --operation all --cluster --allow-principal=<principal-name> \
@@ -58,7 +59,7 @@ rpk security acl create --operation all --cluster --allow-principal=<principal-n
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
-## list acls
+### list acls
 ```
 rpk security acl list --allow-principal=<principal-name> \
 -X user=<super-user> \
@@ -66,7 +67,7 @@ rpk security acl list --allow-principal=<principal-name> \
 -X sasl.mechanism=SCRAM-SHA-256
 ```
 
-# offsets
+## offsets
 - Delete offset for groups:
     - `rpk group offset-delete <group> --from-file <fileName>`
         - with file like <br>
@@ -83,7 +84,7 @@ rpk security acl list --allow-principal=<principal-name> \
         -X sasl.mechanism=SCRAM-SHA-256
     - https://docs.redpanda.com/current/reference/rpk/rpk-group/rpk-group-offset-delete/
 
-# create topic
+## create topic
 - ```rpk topic create <topic-name> \
     -X user=<super-user> \
     -X pass=<super-user-password> \

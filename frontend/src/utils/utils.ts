@@ -1,3 +1,4 @@
+import { CSRF_TOKEN_COOKIE_NAME } from "./constants";
 
 /**
  * @param statusCode http status code to check
@@ -117,3 +118,13 @@ export async function sleep<T>(delay: number, resolveValue?: T): Promise<T | und
         }, delay);
     });
 } 
+
+/**
+ * @returns the plain csrf token value or `null` if the cookie is not present
+ */
+export async function retrieveCsrfTokenCookieValue(): Promise<string | null> {
+    const result = await cookieStore.get(CSRF_TOKEN_COOKIE_NAME);
+    await sleep(1000);
+
+    return result?.value ?? null;
+}
