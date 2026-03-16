@@ -21,7 +21,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-@Configuration
+// @Configuration
 @Slf4j
 public class JwtConfig {
 

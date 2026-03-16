@@ -1,7 +1,7 @@
 services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
-    container_name: redpanda-one
+    container_name: redpanda
     user: root
     command: redpanda start
     ports:
@@ -9,7 +9,7 @@ services:
       - "9092:9092"
       - "9093:9093"
     healthcheck:
-      test: ["CMD-SHELL", "rpk cluster info -X user=console-admin -X pass=password -X sasl.mechanism=SCRAM-SHA-256"] # TODO: add authentication (?)
+      test: ["CMD-SHELL", "rpk cluster info -X user=admin -X pass=password -X sasl.mechanism=SCRAM-SHA-256"]
       start_period: 2s
       interval: 5s
       timeout: 10s
@@ -34,6 +34,11 @@ services:
   console:
     image: docker.redpanda.com/redpandadata/console:latest
     container_name: redpanda-console
+    healthcheck:
+      test: wget --no-verbose --no-check-certificate --tries=1 --spider http://host.docker.internal:8090 || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 5
     environment:
       CONFIG_FILEPATH: /etc/redpanda/redpanda-console-config.yaml
     ports:
@@ -43,3 +48,25 @@ services:
     depends_on:
       redpanda:
         condition: service_healthy
+
+  keycloak:
+    image: keycloak/keycloak:26.5
+    container_name: keycloak
+    ports: 
+      - "8070:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: password
+    command: start-dev
+
+  # for adding cors to the pandaproxy
+  nginx_frontend:
+    build:
+      context: ./frontend
+      args:
+        APP_ENV: development
+        NODE_VERSION: 24.14.0-alpine3.23
+    ports: 
+      - 3000:3000
+    volumes:
+      - ./.nginx/nginx.frontend.conf:/etc/nginx/conf.d/default.conf

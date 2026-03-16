@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
@@ -48,11 +49,12 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
@@ -64,6 +66,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import reactor.core.publisher.Mono;
 
 
 /**
@@ -86,9 +89,8 @@ public class Utils {
     public static final String CONFIRM_ACCOUNT_PATH = "/app-user/confirm-account";
     /** Also hard coded in "constants.ts" */
     public static final String RESET_PASSWORD_TOKEN_URL_QUERY_PARAM = "token";
-    /** Also hard coded in "constants.ts" */
-    public static final String CSRF_TOKEN_URL_QUERY_PARAM = "csrf";
     public static final String LOGIN_PATH = "/login";
+    public static final String LOGOUT_PATH = "/logout";
     public static final String PRIVACY_POLICY_PATH = "/privacy-policy";
     public static final String CONTACT_PATH = "/contact";
     public static final String RESET_PASSWORD_PATH = "/reset-password-by-token";
@@ -428,8 +430,8 @@ public class Utils {
     /**
      * @return the request currently beeing processed
      */
+    // TODO: does not work for reactive
     public static HttpServletRequest getCurrentRequest() {
-
         try {
             return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             
@@ -444,7 +446,6 @@ public class Utils {
      * @return the path of the request currently beeing processed or an empty string if no request is available for the current thread
      */
     public static String getReqeustPath() {
-
         HttpServletRequest request = getCurrentRequest();
 
         return request == null ? "" : request.getServletPath();
@@ -508,18 +509,76 @@ public class Utils {
         return false;
     }
 
+    /**
+     * 
+     * @param response
+     * @param status
+     * @param object will write an empty string to response if {@code null}
+     * @throws IllegalArgumentException
+     */
+    // TODO: check if response is committed
+    public static void writeToResponse(ServerHttpResponse response, @Nullable HttpStatus status, @Nullable Object object) throws IllegalArgumentException {
+        assertArgsNotNullAndNotBlankOrThrow(response);
 
-    public static void writeToResponse(HttpServletResponse response, Object object) throws JsonProcessingException, IOException, IllegalArgumentException {
+        if (response.isCommitted()) {
+            log.warn("Response already committed");
+            return;
+        }
 
+        // serialize payload
+        String objectStr;
+        if (object == null)
+            objectStr = "";
+
+        else if (object instanceof String) {
+            objectStr = (String) object;
+            response.getHeaders().setContentType(MediaType.TEXT_PLAIN);
+
+        } else {
+            try {
+                objectStr = getDefaultObjectMapper().writeValueAsString(object);
+            } catch (JsonProcessingException e) {
+                throw new IllegalStateException(e);
+            }
+            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        }
+
+        if (status != null)
+            response.setStatusCode(status);
+        
+        byte[] responseBody = objectStr.getBytes(Charset.forName("utf-8"));
+        response.writeWith(Mono.just(response.bufferFactory().wrap(responseBody)))
+            .subscribe();
+    }
+
+    /**
+     * @param response
+     * @param object
+     * @throws IllegalArgumentException
+     */
+    public static void writeToResponse(ServerHttpResponse response, @Nullable Object object) throws IllegalArgumentException {
+        writeToResponse(response, null, object);
+    }
+
+    /**
+     * 
+     * @param response
+     * @param object will write an empty string to response if {@code null}
+     * @throws JsonProcessingException
+     * @throws IOException
+     * @throws IllegalArgumentException
+     */
+    public static void writeToResponse(HttpServletResponse response, @Nullable Object object) throws JsonProcessingException, IOException, IllegalArgumentException {
         assertArgsNotNullAndNotBlankOrThrow(response);
 
         if (object == null)
-            throw new IllegalArgumentException("'object' cannot be null");
+            object = "";
 
-        if (object instanceof String)
+        if (object instanceof String) {
             response.getWriter().write((String) object);
+            response.setContentType(MediaType.TEXT_PLAIN_VALUE);
 
-        else {
+        } else {
             response.getWriter().write(getDefaultObjectMapper().writeValueAsString(object));
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         }
@@ -559,7 +618,6 @@ public class Utils {
      * @throws IllegalArgumentException
      */
     public static void writeToResponse(HttpServletResponse response, HttpStatus status, String message) throws JsonProcessingException, IOException, IllegalArgumentException {
-
         writeToResponse(response, status, message, false);
     }
     
@@ -578,7 +636,6 @@ public class Utils {
      * @throws IllegalArgumentException
      */
     public static void writeToResponse(HttpServletResponse response, HttpStatus status, @Nullable Exception exception) throws JsonProcessingException, IOException, IllegalArgumentException {
-
         CustomExceptionHandler.logPackageStackTrace(exception);
         writeToResponse(response, status, exception.getMessage());
     }
@@ -593,7 +650,6 @@ public class Utils {
      * @throws IllegalStateException if given response is already committed
      */
     public static void redirect(HttpServletResponse response, String location) throws IllegalArgumentException, IllegalStateException {
-
         assertArgsNotNullAndNotBlankOrThrow(response, location);
 
         if (response.isCommitted())
@@ -603,6 +659,15 @@ public class Utils {
         response.setHeader("Location", location);
     }
 
+    public static void redirect(ServerHttpResponse response, String location) throws IllegalArgumentException, IllegalStateException {
+        assertArgsNotNullAndNotBlankOrThrow(response, location);
+
+        if (response.isCommitted())
+            throw new IllegalStateException("Response already committed");
+
+        response.setRawStatusCode(302);
+        response.getHeaders().set("Location", location);
+    }
 
     /**
      * Wont throw.

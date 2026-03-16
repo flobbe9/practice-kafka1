@@ -34,7 +34,7 @@ import lombok.Getter;
  * 
  * @since 0.0.1
  */
-@Service
+// @Service
 public class Oauth2Service {
             
     @Autowired

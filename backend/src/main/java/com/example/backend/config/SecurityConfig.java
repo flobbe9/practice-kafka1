@@ -1,7 +1,7 @@
 package com.example.backend.config;
 
-import static com.example.backend.helpers.Utils.CONFIRM_ACCOUNT_PATH;
 import static com.example.backend.helpers.Utils.LOGIN_PATH;
+import static com.example.backend.helpers.Utils.LOGOUT_PATH;
 
 import java.util.List;
 
@@ -9,55 +9,38 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher.MatchResult;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 
 
 /**
- * Configuration class to authentiacate requests.<p>
- * 
- * NOTE: this class autowires {@code AppUserService} via {@link CustomLoginSuccessHandler}.
- * 
  * @since 0.0.1
  */
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true, prePostEnabled = false)
+@EnableWebFluxSecurity
 @Log4j2
 public class SecurityConfig {
 
     @Value("${FRONTEND_BASE_URL}")
     private String FRONTEND_BASE_URL;
 
-    /**
-     * Possible values:<p>
-     * 
-     * - {@code production}: login required, no develpment endpoints like swagger permitted, csrf enabled, .env.local not used<p>
-     * - {@code qa}: login required, no develpment endpoints like swagger permitted, csrf enabled <p>
-     * - {@code development}: no login required, all development endpoints like swagger permitted, csrf disabled
-     */
     @Value("${ENV}")
     private String ENV;
 
     @Autowired
-    private CustomLoginSuccessHandler customLoginSuccessHandler;
+    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     @Autowired
-    private CustomLogoutSuccessHandler customLogoutSuccessHandler;
-    @Autowired
-    private CustomLoginFailureHandler customLoginFailureHandler;
-    @Autowired
-    private CustomUnAuthenticatedHandler customUnAuthenticatedHandler;
-    @Autowired
-    private CustomOauth2GrantedAuthoritiesMapper customOauth2GrantedAuthoritiesMapper;
+    private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
 
     @PostConstruct
@@ -65,7 +48,6 @@ public class SecurityConfig {
         log.info("Configuring api security...");
     }
 
-    
     /**
      * NOTE: RequestMatchers dont override each other. That's why order of calls matters.
      * 
@@ -74,29 +56,41 @@ public class SecurityConfig {
      * @throws Exception
      */
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
+    SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf
+            // .disable()
+            // store csrf token as cookie and make it accessible to client side script
+            .csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) 
+            .csrfTokenRequestHandler((exchange, csrfToken) -> {
+                csrfToken.subscribe(); // make spring actually load the csrf token
+            })
+        );
 
-        http.authorizeHttpRequests(request -> request
-            .anyRequest()
-            .permitAll());
+        http.authorizeExchange(request -> request
+            .pathMatchers(getPermittedRoutes())
+                .permitAll()
+            .matchers((exchange) -> {
+                ServerHttpRequest req = exchange.getRequest();
+                String path = req.getPath().value();
+                String resourceFileRegex = ".*(.js|.jsx|.ts|.tsx|.css|.html|.htm|.php|.jpg|.jpeg|.png|.webp|.svg|.txt|.ttf|.otf|.woff|.woff2).*";
 
-        http.formLogin(formLogin -> formLogin
-            .successHandler(this.customLoginSuccessHandler)
-            .failureHandler(this.customLoginFailureHandler));
+                boolean isMatch = path.matches(resourceFileRegex);
+                log.trace("match path {}, {}", path, isMatch);
+
+                return isMatch ? MatchResult.match() : MatchResult.notMatch();
+            })
+                .permitAll()
+            .anyExchange()
+                .authenticated()
+        );
 
         http.oauth2Login(oauth2login -> oauth2login
-            .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
-                .userAuthoritiesMapper(this.customOauth2GrantedAuthoritiesMapper))
-            .successHandler(this.customLoginSuccessHandler)
-            .failureHandler(this.customLoginFailureHandler));
-
-        http.logout(logout -> logout
-            .logoutSuccessHandler(this.customLogoutSuccessHandler));
-
-        // 401 (see "CustomExceptionHandler.java" for 403 handling)
-        http.exceptionHandling(exceptionHandling -> exceptionHandling
-            .authenticationEntryPoint(this.customUnAuthenticatedHandler));
+            // prevents spring from generating a html template for login and logout page
+            .loginPage(LOGIN_PATH) 
+            .authenticationSuccessHandler(this.customAuthenticationSuccessHandler)
+            // TODO: when does this even happen?
+            // .authenticationFailureHandler(this.customAuthenticationFailureHandler)
+        );
 
         http.cors(cors -> cors
             .configurationSource(corsConfig()));
@@ -104,14 +98,13 @@ public class SecurityConfig {
         return http.build();
     }
 
-
     /**
-     * Allowing only certain urls to access this api. <p>
+     * Application level cors config.<p>
      * 
      * Used in filter chain: <p>
      * {@code http.cors(cors -> cors.configurationSource(corsConfig()))}
      * 
-     * @return the configured {@link CorsConfigurationSource}
+     * @return
      */
     private CorsConfigurationSource corsConfig() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -125,59 +118,14 @@ public class SecurityConfig {
 
         return source;
     }
-    
-
-    /**
-     * Will make the csrf token available on login (and every other request).<p>
-     * 
-     * Used in security filter chain:<p>
-     * {@code http.csrf(csrf -> csrf.csrfTokenRequestHandler(customCsrfTokenRequestAttributeHandler()));}
-     * 
-     * @return
-     */
-    private CsrfTokenRequestAttributeHandler customCsrfTokenRequestAttributeHandler() {
-
-        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
-        handler.setCsrfRequestAttributeName(null);
-
-        return handler;
-    }
-    
 
     /**
      * @return array of paths that a user should be able to access without having a valid session, e.g. "/api/userService/register"
      */
     private String[] getPermittedRoutes() {
-
         return new String[] {
-            "/logout",
             LOGIN_PATH,
-            "/app-user/register",
-            CONFIRM_ACCOUNT_PATH,
-            "/app-user/resend-confirmation-mail",
-            "/app-user/check-logged-in",
-            "/app-user/send-reset-password-mail",
-            "/app-user/reset-password-by-token",
-            "/version"
-        };
-    }
-
-
-    /**
-     * Array of paths swagger uses. Assuming that no paths have been changed in properties file.
-     * 
-     * @return fixed size array of paths swagger uses
-     */
-    private String[] getSwaggerPaths() {
-
-        return new String[] {
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/configuration/ui",
-            "/swagger-resources/**",
-            "/configuration/security",
-            "/webjars/**"
+            LOGOUT_PATH
         };
     }
 }

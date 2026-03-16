@@ -31,7 +31,7 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 
-@Service
+// @Service
 public class JwtService {
 
     @Autowired
