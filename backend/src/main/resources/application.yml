@@ -78,7 +78,14 @@ spring:
     #                     # useInsecureTrustManager: true
     #                     trustedX509Certificates:
     #                         - classpath:ssl/localhost.crt
-                            
+
+springdoc:
+    api-docs:
+        enabled: ${SWAGGER_ENABLED}
+        path: /${NON_FRONTEND_MAPPING}/v3/api-docs
+    swagger-ui:
+        enabled: ${SWAGGER_ENABLED}
+        path: /${NON_FRONTEND_MAPPING}/swagger-ui/index.html
 logging:
     level:
         com:

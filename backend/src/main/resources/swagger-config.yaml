@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info: 
+  title: Kafka gateway
+  version: 0.0.1
+paths:
+  /access-token:
+    post:
+      tags:
+        - authentication
+      summary: Get the access token of the current oauth session
+      description: Get the access token of the current oauth session... TODO
+      operationId: access-token
+      responses:
+        '200':
+          description: Got an access token
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExceptionFormat'
+        '403':
+          description: Invalid csrf token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExceptionFormat'
+components:
+  schemas:
+    CustomExceptionFormat:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          example: 2026-03-18 15:00:00.00000
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: OK
+          description: Might be an empty string or null
+        path:
+          description: Relative path of the request which caused the error
+          type: string
+          example: /login
+
+tags:
+  - name: authentication
+    description: Contains auth session related endpoints
