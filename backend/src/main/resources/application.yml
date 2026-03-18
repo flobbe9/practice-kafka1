@@ -93,3 +93,6 @@ logging:
         # org:
         #     springframework:
         #         security:  TRACE
+
+
+appVersion: 0.0.1-SNAPSHOT

@@ -3,8 +3,11 @@ package com.example.backend;
 import java.io.IOException;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 
 import com.example.backend.helpers.Utils;
 
@@ -14,14 +17,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BackendApplication {
 
-	public static void main(String[] args) {
-		readEnvFiles("./.env.local", "./.env.version");
-        
-        log.info("App version {}", System.getProperty("VERSION"));
-        log.info("-Xmx={}m", Math.round((Runtime.getRuntime().maxMemory() / Math.pow(1024, 2)) * 100.0) / 100.0); // in MB, 2 fractions
+	@Value("${appVersion}")
+	private String APP_VERSION;
 
+	public static void main(String[] args) {
+		readEnvFiles("./.env.local");
+        
 		SpringApplication.run(BackendApplication.class, args);
 	}
+    
+    @EventListener(ApplicationReadyEvent.class)
+    void onApplicationReady() {
+        log.info("App version {}", this.APP_VERSION);
+        log.info("-Xmx={}m", Math.round((Runtime.getRuntime().maxMemory() / Math.pow(1024, 2)) * 100.0) / 100.0); // in MB, 2 fractions
+    }
 
     /**
      * Read other .env files and set key values as sys properties. Arg env files will override each other (including the .env file).<p>
