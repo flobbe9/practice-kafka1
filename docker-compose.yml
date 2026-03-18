@@ -58,6 +58,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: password
     command: start-dev
+    volumes:
+      - ./.volumes/keycloak:/opt/keycloak/data/h2
 
   # for adding cors to the pandaproxy
   nginx_frontend:

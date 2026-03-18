@@ -430,7 +430,6 @@ public class Utils {
     /**
      * @return the request currently beeing processed
      */
-    // TODO: does not work for reactive
     public static HttpServletRequest getCurrentRequest() {
         try {
             return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -510,19 +509,18 @@ public class Utils {
     }
 
     /**
-     * 
      * @param response
      * @param status
-     * @param object will write an empty string to response if {@code null}
+     * @param object will attempt to parse to json if not a string. Will write an empty string to response if {@code null}
+     * @return a Mono that indicates completion or error
      * @throws IllegalArgumentException
      */
-    // TODO: check if response is committed
-    public static void writeToResponse(ServerHttpResponse response, @Nullable HttpStatus status, @Nullable Object object) throws IllegalArgumentException {
+    public static Mono<Void> writeStringToResponse(ServerHttpResponse response, @Nullable HttpStatus status, @Nullable Object object) throws IllegalArgumentException {
         assertArgsNotNullAndNotBlankOrThrow(response);
 
         if (response.isCommitted()) {
             log.warn("Response already committed");
-            return;
+            return Mono.empty();
         }
 
         // serialize payload
@@ -547,8 +545,7 @@ public class Utils {
             response.setStatusCode(status);
         
         byte[] responseBody = objectStr.getBytes(Charset.forName("utf-8"));
-        response.writeWith(Mono.just(response.bufferFactory().wrap(responseBody)))
-            .subscribe();
+        return response.writeWith(Mono.just(response.bufferFactory().wrap(responseBody)));
     }
 
     /**
@@ -556,8 +553,8 @@ public class Utils {
      * @param object
      * @throws IllegalArgumentException
      */
-    public static void writeToResponse(ServerHttpResponse response, @Nullable Object object) throws IllegalArgumentException {
-        writeToResponse(response, null, object);
+    public static void writeStringToResponse(ServerHttpResponse response, @Nullable Object object) throws IllegalArgumentException {
+        writeStringToResponse(response, null, object);
     }
 
     /**

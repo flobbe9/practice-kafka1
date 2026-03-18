@@ -17,3 +17,4 @@ redpanda-js
 test/
 
 .volumes/redpanda/data
+.volumes/keycloak

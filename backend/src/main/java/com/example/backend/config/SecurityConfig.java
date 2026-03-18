@@ -36,11 +36,16 @@ public class SecurityConfig {
 
     @Value("${ENV}")
     private String ENV;
+    
+    @Value("${NON_FRONTEND_MAPPING}")
+    private String NON_FRONTEND_MAPPING;
 
     @Autowired
     private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    // @Autowired
+    // private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
     @Autowired
-    private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private CustomServerAuthenticationEntrypoint customServerAuthenticationEntrypoint;
 
 
     @PostConstruct
@@ -57,17 +62,22 @@ public class SecurityConfig {
      */
     @Bean
     SecurityWebFilterChain filterChain(ServerHttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf
-            // .disable()
-            // store csrf token as cookie and make it accessible to client side script
-            .csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) 
-            .csrfTokenRequestHandler((exchange, csrfToken) -> {
-                csrfToken.subscribe(); // make spring actually load the csrf token
-            })
-        );
+        if ("development".equals(this.ENV))
+            http.csrf(csrf -> csrf.disable());
+        
+        else
+            http.csrf(csrf -> csrf
+                // store csrf token as cookie and make it accessible to client side script
+                .csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) 
+                .csrfTokenRequestHandler((exchange, csrfToken) -> {
+                    csrfToken.subscribe(); // make spring actually load the csrf token
+                })
+            );
 
         http.authorizeExchange(request -> request
             .pathMatchers(getPermittedRoutes())
+                .permitAll()
+            .pathMatchers(getSwaggerPaths())
                 .permitAll()
             .matchers((exchange) -> {
                 ServerHttpRequest req = exchange.getRequest();
@@ -90,6 +100,10 @@ public class SecurityConfig {
             .authenticationSuccessHandler(this.customAuthenticationSuccessHandler)
             // TODO: when does this even happen?
             // .authenticationFailureHandler(this.customAuthenticationFailureHandler)
+        );
+
+        http.exceptionHandling(exceptionHandler -> exceptionHandler
+            .authenticationEntryPoint(this.customServerAuthenticationEntrypoint)
         );
 
         http.cors(cors -> cors
@@ -126,6 +140,23 @@ public class SecurityConfig {
         return new String[] {
             LOGIN_PATH,
             LOGOUT_PATH
+        };
+    }
+
+    /**
+     * Array of paths swagger uses. Assuming that no paths have been changed in properties file.
+     * 
+     * @return fixed size array of paths swagger uses
+     */
+    private String[] getSwaggerPaths() {
+        return new String[] {
+            "/" + this.NON_FRONTEND_MAPPING + "/swagger-ui.html",
+            "/" + this.NON_FRONTEND_MAPPING + "/swagger-ui/**",
+            "/" + this.NON_FRONTEND_MAPPING + "/v3/api-docs/**",
+            "/" + this.NON_FRONTEND_MAPPING + "/configuration/ui",
+            "/" + this.NON_FRONTEND_MAPPING + "/swagger-resources/**",
+            "/" + this.NON_FRONTEND_MAPPING + "/configuration/security",
+            "/" + this.NON_FRONTEND_MAPPING + "/webjars/**"
         };
     }
 }
