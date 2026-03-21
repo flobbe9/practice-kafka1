@@ -12,5 +12,5 @@ export interface RedpandaConfig {
     /**
      * For authenticating with the redpanda `host`.
      */
-    authConfig: RedpandaAuthConfig;
+    authConfig?: RedpandaAuthConfig;
 }

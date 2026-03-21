@@ -152,7 +152,7 @@ export class RedpandaFetcher {
      * @return modified `existingFetchHeaders`
      */
     private async addFetchHeaders(existingFetchHeaders: HeadersInit = {}): Promise<HeadersInit> {
-        if (!hasOwnIgnoreCase(existingFetchHeaders, AUTHORIIZATION_HEADER_KEY)) {
+        if (this.redpandaConfig.authConfig && !hasOwnIgnoreCase(existingFetchHeaders, AUTHORIIZATION_HEADER_KEY)) {
             const authorizationHeaderValue = await this.redpandaConfig.authConfig.getAuthorizationHeaderValue();
             Object.assign(existingFetchHeaders, {[AUTHORIIZATION_HEADER_KEY]: authorizationHeaderValue});
         }
