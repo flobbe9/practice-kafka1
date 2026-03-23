@@ -5,9 +5,9 @@ import static com.example.backend.helpers.Utils.assertArgsNotNullAndNotBlankOrTh
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 public class Oauth2Service {
 
     @Autowired
-    private ServerOAuth2AuthorizedClientRepository oauth2AuthorizedClientRepository;
+    private ReactiveOAuth2AuthorizedClientManager reactiveOAuth2AuthorizedClientManager;
 
     
     /**
@@ -42,7 +42,7 @@ public class Oauth2Service {
     }
     
     /**
-     * Get an access token for the current oauth2 session.
+     * Get an access token for the current oauth2 session. Will attempt to use the refresh token automatically.
      * 
      * @param exchange the current server exchange, needed to get authentication details
      * @return the access token of the current oauth2 session that is beeing retrieved after successful login
@@ -54,11 +54,20 @@ public class Oauth2Service {
         assertArgsNotNullAndNotBlankOrThrow(exchange);
 
         return getOauth2PrincipalOrThrow(exchange)
-            .flatMap(principal -> 
-                (Mono<OAuth2AuthorizedClient>) this.oauth2AuthorizedClientRepository
-                    .loadAuthorizedClient(principal.getAuthorizedClientRegistrationId(), principal, exchange)
-            )
-            .map(oAuth2AuthorizedClient -> oAuth2AuthorizedClient.getAccessToken().getTokenValue());
+            .flatMap(principal -> Mono.just(
+                OAuth2AuthorizeRequest
+                    .withClientRegistrationId(principal.getAuthorizedClientRegistrationId())
+                    .principal(principal)
+                    .build()
+            ))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED)))
+            .flatMap(authorizedRequest -> {
+                Mono<String> token = this.reactiveOAuth2AuthorizedClientManager
+                    .authorize(authorizedRequest)
+                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED))) // no refresh token
+                    .map(client -> client.getAccessToken().getTokenValue());
+                return token;
+            });
     }
 
     /**

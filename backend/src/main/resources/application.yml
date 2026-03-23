@@ -34,6 +34,7 @@ spring:
                         scope: 
                             - email
                             - openid
+                            - offline_access 
                 provider:
                     keycloak:
                         issuer-uri: ${OAUTH2_ISSUER_URI_KEYCLOAK}

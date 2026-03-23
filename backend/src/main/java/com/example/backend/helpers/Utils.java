@@ -897,4 +897,25 @@ public class Utils {
         log.info("Java heap space actual: {}m", Math.round((Runtime.getRuntime().totalMemory() / Math.pow(1024, 2)) * 100.0) / 100.0); // in MB, 2 fractions
         log.info("Java heap space currently used: {}m", Math.round(((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Math.pow(1024, 2)) * 100.0) / 100.0); // in MB, 2 fractions
     }
+
+    /**
+     * @param str
+     * @param charToTrim character to trim from start and end of {@code str}
+     * @return trimmed {@code str}
+     */
+    public static String trim(@Nullable String str, @NonNull char charToTrim) {
+        // case: nothing to trim
+        if (str == null || str.isEmpty())
+            return str;
+
+        String trimmedStr = str;
+
+        while (trimmedStr.startsWith(Character.toString(charToTrim)))
+            trimmedStr = trimmedStr.substring(1);
+
+        while (trimmedStr.endsWith(Character.toString(charToTrim)))
+            trimmedStr = trimmedStr.substring(0, trimmedStr.length() - 1);
+
+        return trimmedStr;
+    }
 }

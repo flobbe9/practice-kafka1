@@ -10,6 +10,13 @@ paths:
       summary: Get the access token of the current oauth session
       description: Get the access token of the current oauth session... TODO
       operationId: access-token
+      parameters:
+        - name: decode
+          in: query
+          description: Whether to return the access token as decoded json value. Only supported in development.
+          schema: 
+            type: boolean
+            default: false
       responses:
         '200':
           description: Got an access token
@@ -17,6 +24,9 @@ paths:
             text/plain:
               schema:
                 type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jwt'
         '401':
           description: Not logged in
           content:
@@ -48,7 +58,10 @@ components:
           description: Relative path of the request which caused the error
           type: string
           example: /login
+    Jwt:
+      type: object
+      description: See org.springframework.security.oauth2.jwt.Jwt
 
 tags:
   - name: authentication
-    description: Contains auth session related endpoints
+    description: Contains oauth session related endpoints

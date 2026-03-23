@@ -10,8 +10,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher.MatchResult;
@@ -74,25 +81,38 @@ public class SecurityConfig {
                 })
             );
 
-        http.authorizeExchange(request -> request
-            .pathMatchers(getPermittedRoutes())
-                .permitAll()
-            .pathMatchers(getSwaggerPaths())
-                .permitAll()
-            .matchers((exchange) -> {
-                ServerHttpRequest req = exchange.getRequest();
-                String path = req.getPath().value();
-                String resourceFileRegex = ".*(.js|.jsx|.ts|.tsx|.css|.html|.htm|.php|.jpg|.jpeg|.png|.webp|.svg|.txt|.ttf|.otf|.woff|.woff2).*";
+        if ("development".equals(this.ENV))
+            http.
+                authorizeExchange(exchange -> exchange
+                    .pathMatchers(getPermittedRoutes())
+                        .permitAll()
+                    .pathMatchers(getSwaggerPaths())
+                        .permitAll()
+                    .pathMatchers("/" + this.NON_FRONTEND_MAPPING + "/**")
+                        .authenticated()
+                    .anyExchange()
+                        .permitAll()
+                );
+        else
+            http.authorizeExchange(request -> request
+                .pathMatchers(getPermittedRoutes())
+                    .permitAll()
+                .pathMatchers(getSwaggerPaths())
+                    .permitAll()
+                .matchers((exchange) -> {
+                    ServerHttpRequest req = exchange.getRequest();
+                    String path = req.getPath().value();
+                    String resourceFileRegex = ".*(.js|.jsx|.ts|.tsx|.css|.html|.htm|.php|.jpg|.jpeg|.png|.webp|.svg|.txt|.ttf|.otf|.woff|.woff2).*";
 
-                boolean isMatch = path.matches(resourceFileRegex);
-                log.trace("match path {}, {}", path, isMatch);
+                    boolean isMatch = path.matches(resourceFileRegex);
+                    log.trace("match path {}, {}", path, isMatch);
 
-                return isMatch ? MatchResult.match() : MatchResult.notMatch();
-            })
-                .permitAll()
-            .anyExchange()
-                .authenticated()
-        );
+                    return isMatch ? MatchResult.match() : MatchResult.notMatch();
+                })
+                    .permitAll()
+                .anyExchange()
+                    .authenticated()
+            );
 
         http.oauth2Login(oauth2login -> oauth2login
             // prevents spring from generating a html template for login and logout page
@@ -110,6 +130,25 @@ public class SecurityConfig {
             .configurationSource(corsConfig()));
 
         return http.build();
+    }
+
+    /**
+     * Defines how the authorized client manager makes requests to idp (?).<p>
+     * 
+     * Can be used to retrieve an access token while automatically renewing it with the refresh-token.
+     */
+    @Bean
+    ReactiveOAuth2AuthorizedClientManager authorizedClientManager(ReactiveClientRegistrationRepository clientRegistrationRepository, ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
+        // Provider that handles refresh token grant
+        ReactiveOAuth2AuthorizedClientProvider authorizedClientProvider = ReactiveOAuth2AuthorizedClientProviderBuilder.builder()
+            .authorizationCode()
+            .refreshToken()
+            .build();
+        
+        DefaultReactiveOAuth2AuthorizedClientManager manager = new DefaultReactiveOAuth2AuthorizedClientManager(clientRegistrationRepository, authorizedClientRepository);
+        manager.setAuthorizedClientProvider(authorizedClientProvider);
+
+        return manager;
     }
 
     /**
