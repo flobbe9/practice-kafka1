@@ -2,10 +2,9 @@
 - create super user and spring's unauthenticated default user for testing
     - `rpk security user create admin -p "password" --mechanism SCRAM-SHA-256`
     - `rpk security user create console-admin -p "password" --mechanism SCRAM-SHA-256`
-    - `rpk security user create anonymousUser -p "password" --mechanism SCRAM-SHA-256`
 - create a first test topic
     - ```rpk topic create test \
-        -X user=anonymousUser \
+        -X user=admin \
         -X pass=password \
         -X sasl.mechanism=SCRAM-SHA-256```
 - add the console user to the redpanda service once (or on every startup if not usinga volume for /data):

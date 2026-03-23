@@ -1,12 +1,15 @@
 package com.example.backend.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.factory.StripPrefixGatewayFilterFactory;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+import com.example.backend.helpers.Utils;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -54,6 +57,11 @@ public class RouterConfig implements WebFluxConfigurer {
                         log.trace("Route to kafka service, request path: {}", exchange.getRequest().getPath());
                         return chain.filter(exchange);
                     })
+                    // strip KFAKA_MAPPING from redirect path
+                    .filter(new StripPrefixGatewayFilterFactory().apply(config -> {
+                        String unslashedMapping = Utils.trim(this.KAFKA_MAPPING, '/'); // make sure that split("/") will return the correct number of path elements
+                        config.setParts(unslashedMapping.split("/").length);
+                    }))
                     .tokenRelay()
                 )
                 .uri(this.KAFKA_BASE_URL))

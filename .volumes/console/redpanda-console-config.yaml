@@ -14,11 +14,11 @@ redpanda:
     enabled: true
     urls: ["http://redpanda:9644"]
     # paid feature
-    # authentication:
-    #   impersonateUser: false
-    #   basic:
-    #     username: console-admin
-    #     password: password
+    authentication:
+      impersonateUser: false
+      basic:
+        username: console-admin
+        password: password
 
 # give console user access to schema registry
 schemaRegistry:
