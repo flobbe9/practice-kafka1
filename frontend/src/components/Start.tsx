@@ -1,6 +1,6 @@
 import { GLOBAL_REDPANDA_CONFIG } from "@/utils/constants";
-import { useState, useRef, useEffect, JSX } from "react";
-import { ConsumerRecord, Consumer, Producer, Topic, catchApiException, RedpandaRecordKeyValueType } from "redpanda";
+import { JSX, useEffect, useRef, useState } from "react";
+import { catchApiException, Consumer, ConsumerRecord, Producer, RedpandaRecordKeyValueType, Topic } from "redpanda";
 
 export default function Start() {
 	const [records, setRecords] = useState<ConsumerRecord[]>([]);
@@ -108,15 +108,6 @@ export default function Start() {
 						value: valueInputRef.current?.value || null,
 						partition: 1
 					},
-					{
-						key: keyInputRef.current?.value || null,
-						value: "2",
-						partition: 2
-					},
-					{
-						key: keyInputRef.current?.value || null,
-						value: "3",
-					}
 				]
 			})
 		} catch (e) {
@@ -163,9 +154,6 @@ export default function Start() {
 			<input ref={valueInputRef} type="text" placeholder='value' />
 			<br />
 			<button onClick={produce}>Produce</button>
-
-			<a href="http://localhost:4001/oauth2/authorization/github">Login</a>
-
         </div>
     )
 }
