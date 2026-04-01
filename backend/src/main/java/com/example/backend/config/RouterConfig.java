@@ -54,7 +54,7 @@ public class RouterConfig implements WebFluxConfigurer {
                 .path("/" + this.KAFKA_MAPPING + "/**")
                 .filters(filter -> filter
                     .filter((exchange, chain) -> {
-                        log.trace("Route to kafka service, request path: {}", exchange.getRequest().getPath());
+                        log.trace("Route to kafka service, request: {} - {}", exchange.getRequest().getMethod().name().toUpperCase(), exchange.getRequest().getPath());
                         return chain.filter(exchange);
                     })
                     // strip KFAKA_MAPPING from redirect path
@@ -75,7 +75,7 @@ public class RouterConfig implements WebFluxConfigurer {
                     .path("/" + this.NON_FRONTEND_MAPPING + "/**"))
                 .filters(filter -> filter
                     .filter((exchange, chain) -> {
-                        log.trace("Route to frontend service, request path: {}", exchange.getRequest().getPath());
+                        log.trace("Route to frontend service, request: {} - {}", exchange.getRequest().getMethod().name().toUpperCase(), exchange.getRequest().getPath());
                         return chain.filter(exchange);
                     })
                 )

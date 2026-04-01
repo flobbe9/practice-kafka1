@@ -4,40 +4,6 @@
 Can be used in both client and server environment (e.g. react app or express app).
 
 ## Examples
-### Config and auth
-Configure how to authenticate with your redpanda instance. 
-```
-// with basic auth
-let globalConfig: RedpandaConfig = {
-	baseUrl: 'http://localhost:8091', // proxy rest api url
-	authConfig: RedpandaBasicAuthConfig.getInstance("user", "password"), 
-}
-
-// with jwt verification, e.g. with oauth2 flow
-globalConfig: RedpandaConfig = {
-	baseUrl: 'http://localhost:8091', // proxy rest api url
-    authConfig: new RedpandaJwtAuthConfig(async (): Promise<string> => {
-		let response: Response | null = null;
-		try {
-			response = await fetch("http://localhost:4001/jwt"); // fetch the jwt token
-
-		} catch (e) {
-			throwApiException({
-				statusCode: 503,
-				message: (e as Error).message, 
-				path: "/jwt"
-			});
-		}
-
-		if (!isHttpStatusCodeAlright(response!.status))
-            // expect backend response body to formatted exactly like CustomApiResponseFormat
-			throwApiException(await response!.json() as CustomApiResponseFormat); 
-
-		return await response!.text();
-	})
-}
-```
-
 ### Producer
 ```
 const producer = new Producer("myTopic", globalConfig);
@@ -99,6 +65,48 @@ const allRecords: ConsumerRecord[] = await allRecords({
 
 // list all topics
 const topics: string[] = await Topic.allTopics(globalConfig);
+```
+
+### Config and auth
+Configure how to authenticate with your redpanda instance. 
+```
+// with basic auth
+let globalConfig: RedpandaConfig = {
+	baseUrl: 'http://localhost:8091', // proxy rest api url
+	authConfig: RedpandaBasicAuthConfig.getInstance("user", "password"), 
+}
+
+// with jwt verification, e.g. with oauth2 flow
+globalConfig: RedpandaConfig = {
+	baseUrl: 'http://localhost:8091', // proxy rest api url
+    authConfig: new RedpandaJwtAuthConfig(async (): Promise<string> => {
+		let response: Response | null = null;
+		try {
+			response = await fetch("http://localhost:4001/jwt"); // fetch the jwt token
+
+		} catch (e) {
+			throwApiException({
+				statusCode: 503,
+				message: (e as Error).message, 
+				path: "/jwt"
+			});
+		}
+
+		if (!isHttpStatusCodeAlright(response!.status))
+            // expect backend response body to formatted exactly like CustomApiResponseFormat
+			throwApiException(await response!.json() as CustomApiResponseFormat); 
+
+		return await response!.text();
+	})
+}
+```
+
+# Debugging
+## "session_id not found" (status 400) when consuming
+Just delete and recreate the consumer:
+```
+await consumer.delete();
+await consumer.init();
 ```
 
 # Notes
