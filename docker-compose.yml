@@ -1,11 +1,12 @@
 services:
   redpanda:
-    image: docker.redpanda.com/redpandadata/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v25.3.12
     container_name: redpanda
     user: root
     command: redpanda start
     ports:
       - "8092:8092"
+      - "8093:8093"
       - "9092:9092"
       - "9093:9093"
     healthcheck:
@@ -35,7 +36,7 @@ services:
   #       condition: service_healthy
 
   console:
-    image: docker.redpanda.com/redpandadata/console:latest
+    image: docker.redpanda.com/redpandadata/console:v3.7.0
     container_name: redpanda-console
     healthcheck:
       test: wget --no-verbose --no-check-certificate --tries=1 --spider http://host.docker.internal:8090 || exit 1

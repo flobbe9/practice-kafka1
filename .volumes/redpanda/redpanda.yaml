@@ -58,11 +58,16 @@ rpk:
     coredump_dir: /var/lib/redpanda/coredump
 pandaproxy:
     pandaproxy_api:
-        - address: 0.0.0.0
+        - name: default
+          address: 0.0.0.0
           port: 8092
-        # confusingly enables oidc login, set to "none" in order to disable authentication
+        # confusingly enables oidc login, set to "none" in order to disable authentication, set to "http_basic" to enable auth
           authentication_method: http_basic
-    # client_cache_max_size: 10
-    # client_keep_alive: 300000
-    # consumer_instance_timeout_ms: 300000 # 5 min
+        # client_cache_max_size: 10
+        # client_keep_alive: 300000
+        # consumer_instance_timeout_ms: 300000 # 5 min
+        - name: no_auth
+          address: 0.0.0.0
+          port: 8093
+          authentication_method: none
 schema_registry: {}
