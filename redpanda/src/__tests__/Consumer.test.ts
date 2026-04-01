@@ -263,3 +263,58 @@ describe("parseConsumerResponse", () => {
         expect(records[0].value).not.toBe("{\"foo\":\"bar\"}"); // expect base64
     });
 });
+
+describe("parseRedpandaRecordKeyValueType", () => {
+    test("Should return null for strictly falsy arg", () => {
+        expect(Consumer.parseRedpandaRecordKeyValueType(null)).toBeNull();
+        expect(Consumer.parseRedpandaRecordKeyValueType(undefined as any)).toBeNull();
+    });
+
+    test("Should return exact same string for invalid json", () => {
+        let val = "{\"test\":";
+        expect(Consumer.parseRedpandaRecordKeyValueType(val)).toBe(val); 
+
+        val = "[3, 4";
+        expect(Consumer.parseRedpandaRecordKeyValueType(val)).toBe(val); 
+
+        val = "not json";
+        expect(Consumer.parseRedpandaRecordKeyValueType(val)).toBe(val); 
+        
+        val = "null";
+        expect(Consumer.parseRedpandaRecordKeyValueType(val)).toBe(val); 
+
+        val = "undefined";
+        expect(Consumer.parseRedpandaRecordKeyValueType(val)).toBe(val); 
+    });
+
+    test("Should return valid object, array or string", () => {
+        let val = "{\"test\": 3}";
+        let result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(result).toBeInstanceOf(Object);
+        expect(Object.hasOwn(result as object, "test"));
+        expect((result as {test: number})["test"]).toBe(3);
+
+        val = "[3, 4]";
+        result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(Array.isArray(result)).toBe(true);
+        expect((result as number[]).length).toBe(2);
+        expect((result as number[])).toContain(3);
+        expect((result as number[])).toContain(4);
+
+        val = "3";
+        result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(result).toBe(val); // should be a string
+
+        val = "true";
+        result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(result).toBe(val); // should be a boolean
+        
+        val = "null";
+        result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(result).toBe(val); 
+
+        val = "undefined";
+        result = Consumer.parseRedpandaRecordKeyValueType(val);
+        expect(result).toBe(val); 
+    });
+})
