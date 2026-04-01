@@ -236,8 +236,8 @@ export class Consumer {
 
                 parsedRecords[i] = {
                     ...recordRest,
-                    key: this.parseConsumerKeyValue(decodedKey),
-                    value: this.parseConsumerKeyValue(decodedValue)
+                    key: this.parseRedpandaRecordKeyValueType(decodedKey),
+                    value: this.parseRedpandaRecordKeyValueType(decodedValue)
                 }
             })
 
@@ -245,20 +245,29 @@ export class Consumer {
     }
 
     /**
-     * Parse `keyValue` to json or return plain arg.
+     * Parse `keyValue` to json or return unmodified arg. 
+     * 
+     * Only objects, arrays and `null` will not be returned as strings. Passing a number or boolean will return
+     * a string representation
      * 
      * @param keyValue to be parsed
-     * @returns parsed key value
-     * @throws if json parse error or falsy arg
+     * @returns parsed key value or `null` if arg is strictly falsy
      */
-    private static parseConsumerKeyValue(keyValue: string | null): RedpandaRecordKeyValueType {
-        if (keyValue === null)
+    public static parseRedpandaRecordKeyValueType(keyValue: string | null): RedpandaRecordKeyValueType {
+        if (isStrictlyFalsy(keyValue))
             return null;
 
-        if (keyValue.startsWith("{"))
-            return JSON.parse(keyValue);
+        try {
+            const result = JSON.parse(keyValue!);
+            if (typeof result === "object" && result !== null)
+                return result;
 
-        return keyValue;
+            return result + "";
+
+        // case: not json, just return string or null
+        } catch (e) {
+            return keyValue;
+        }
     }
 
     /**
@@ -369,19 +378,25 @@ export class Consumer {
         if (!isStrictlyFalsy(this.keepAliveIntervalId))
             return;
 
+        const configDelay = Math.min(this._consumerInstanceTimeout ?? this._sessionTimeout);
         // - 3000ms to take slow internet and other latency into account 
-        const delay = Math.min(this._consumerInstanceTimeout ?? this._sessionTimeout) - 3000;
-        if (delay <= 3000) {
-            console.warn(`Not keeping consumer alive because either 'consumerInstanceTimeout' or 'sessionTimeout' is too low: ${delay}. In order to keep this consumer alive specify a timeout greater than 3000 ms.`);
+        const latency = 3000;
+        const delay = configDelay - latency;
+        if (delay <= latency) {
+            console.warn(`Not keeping consumer alive because either 'consumerInstanceTimeout' or 'sessionTimeout' is too low: ${configDelay}. In order to keep this consumer alive specify a timeout greater than ${latency * 2} ms.`);
             return;
         }
 
         this.keepAliveIntervalId = setInterval(async () => {
             try {
                 await this.subscribe(); // cheap request 
-
+                
             } catch (e) {
-                console.warn(`Keep alive request failed: ${e}`);
+                const apiException = catchApiException(e);
+
+                // keep alive is hopeless, stop trying
+                console.warn(`Keep alive request failed, stopping keep alive interval with error:`, apiException);
+                this.stopConsumerKeepAlive();
             }
         }, delay);
     }
