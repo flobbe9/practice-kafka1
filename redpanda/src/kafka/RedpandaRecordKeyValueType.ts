@@ -6,8 +6,9 @@
 export type RedpandaRecordKeyValueFormat = "json" | "txt" | "base64" | null;
 
 /**
- * Ts type of a record's key / value.
+ * Ts type of a record's key / value. 
  * 
  * @since 0.0.1
+ * @see {@link RedpandaRecordKeyValueFormat}
  */
-export type RedpandaRecordKeyValueType = Record<string, any> | string | null;
+export type RedpandaRecordKeyValueType = any[] | Record<string, any> | string | null;
