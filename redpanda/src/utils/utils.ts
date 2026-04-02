@@ -46,41 +46,31 @@ export function assertStrictlyFalsyAndThrow(...args: any[]): void {
     }
 }
 
+/**
+ * Convenience method for throwing api exception which can be caught with {@link catchApiException}.
+ * 
+ * Will throw `exception` arg in any case.
+ * 
+ * @param exception customResponseFormat obj to throw
+ */
 export function throwApiException(exception: CustomApiResponseFormat): never {
-    if (!exception || isNaN(exception.statusCode))
-        throw new Error(`Invalid api response format: ${exception}`);
+    if (!exception || !isCustomApiResponseFormat(exception))
+        console.warn(`Invalid api exception format. 'e' must be of type CustomApiResponseFormat`);
         
-    throw new Error(JSON.stringify(exception));
+    throw exception;
 }
 
 /**
- * Expects `e` to be an `Error` object with a stringified `CustomApiResponseFormat` as `message`.
+ * Convenience method for parsing redpanda fetch errors into {@link CustomApiResponseFormat}.
  * 
- * Will simply throw `e` if `e.message` is not formatted as expected.
- * 
- * @param e error that was caught 
- * @returns the thrown api response format
+ * @param e error that was caught, expected to be of type `CustomApiResponseFormat`
+ * @returns `e` regardless of it's type
  */
 export function catchApiException(e: any): CustomApiResponseFormat {
-    if (!e || !(e instanceof Error)) {
-        console.error(`Failed to catch api exception. Invalid arg:`);
-        throw e;
-    }
+    if (!e || !isCustomApiResponseFormat(e))
+        console.warn(`Invalid api exception format. 'e' must be of type CustomApiResponseFormat`);
 
-    try {
-        const apiResponseFormat = JSON.parse(e.message);
-
-        // case: valid json string but not a valid customApiResponseFormat
-        if (!isCustomApiResponseFormat(apiResponseFormat))
-            throw new Error(`Invalid api response format: ${e.message}`);
-
-        return apiResponseFormat;
-
-    // case: e.message is not a customApiResponseFormat 
-    } catch (e2) {
-        console.error(`Failed to parse api exception format with error: `, e2);
-        throw e;
-    } 
+    return e;
 }
 
 /**
