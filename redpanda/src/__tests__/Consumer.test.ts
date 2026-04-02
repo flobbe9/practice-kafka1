@@ -1,9 +1,11 @@
+import { CustomApiResponseFormat } from "@/CustomApiResponseFormat";
+import { Consumer } from "@/kafka/consumer/Consumer";
+import { ConsumerRecordResponseFormat } from "@/kafka/consumer/ConsumerRecord";
 import { RedpandaBasicAuthConfig } from "@/kafka/RedpandaBasicAuthConfig";
 import { RedpandaConfig } from "@/kafka/RedpandaConfig";
 import { base64Encode } from "@/utils/projectUtils";
 import { expectAsyncNotToThrow, expectAsyncToThrow, mockFetchJson, mockSetInterval } from "@/utils/testUtils";
-import { Consumer } from "@/kafka/consumer/Consumer";
-import { ConsumerRecordResponseFormat } from "@/kafka/consumer/ConsumerRecord";
+import { sleep } from "@/utils/utils";
 
 const mockRedpandaConfig: RedpandaConfig = {
     baseUrl: "http://mockHost",
@@ -52,7 +54,46 @@ describe("startConsumerKeepAlive", () => {
         await consumer.init();
 
         expect(setInterval).not.toHaveBeenCalled();
-    })
+    });
+
+    test("should should stop interval if subscribe fails", async () => {
+        global.clearInterval = jest.fn((_timeout: NodeJS.Timeout | string | number | undefined): void => {
+            console.log("mock clear interval");
+        });
+        // make sure create() call works
+        mockFetchJson(); 
+
+        const intervalId = mockSetInterval((handler: TimerHandler) => {
+            if (!(handler instanceof Function))
+                throw new Error("Unexpected setInterval callback type");
+
+            // make subscribe call fail
+            mockFetchJson(
+                undefined, 
+                {
+                    error_code: 401,
+                    // redpanda response as string in "message" prop
+                    message: JSON.stringify({
+                        statusCode: 401,
+                        message: "",
+                        timestamp: new Date().toISOString(),
+                        path: "/"
+                    } as CustomApiResponseFormat)
+                }, 
+                401
+            ); 
+
+            // try to subscribe
+            handler();
+        });
+        console.warn = jest.fn((..._args: any[]) => {});
+        
+        const consumer = new Consumer(["test"], "group1", "consumer1", mockRedpandaConfig);
+        await consumer.init(); 
+        await sleep(1); // wait for interval to be started
+
+        expect(clearInterval).toHaveBeenCalledWith(intervalId);
+    });
 });
 
 describe("delete", () => {
